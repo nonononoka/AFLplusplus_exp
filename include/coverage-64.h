@@ -80,7 +80,7 @@ inline void classify_counts(afl_forkserver_t *fsrv) {
 
 /* Updates the virgin bits, then reflects whether a new count or a new tuple is
  * seen in ret. */
-inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
+inline void discover_word(u8 *ret, u64 *current, u64 *virgin, u8 reflect) {
 
   /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
      that have not been already cleared from the virgin map - since this will
@@ -106,7 +106,9 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
 
     }
 
-    *virgin &= ~*current;
+    if(reflect){
+      *virgin &= ~*current;
+    }
 
   }
 

@@ -880,6 +880,12 @@ typedef struct afl_state {
 
   s64 last_scored_idx;           /* Index of the last queue entry re-scored */
 
+  u8 has_saturated;
+
+  u64 prev_total_edge_found_in_15_minutes;
+
+  u64 last_updated_delta;
+
 #ifdef INTROSPECTION
   char  mutation[8072];
   char  m_tmp[4096];
@@ -1219,7 +1225,7 @@ u32  count_bytes(afl_state_t *, u8 *);
 u32  count_non_255_bytes(afl_state_t *, u8 *);
 void simplify_trace(afl_state_t *, u8 *);
 #ifdef WORD_SIZE_64
-void discover_word(u8 *ret, u64 *current, u64 *virgin);
+void discover_word(u8 *ret, u64 *current, u64 *virgin, u8 reflect);
 #else
 void discover_word(u8 *ret, u32 *current, u32 *virgin);
 #endif
@@ -1230,6 +1236,7 @@ u8 *describe_op(afl_state_t *, u8, size_t);
 #endif
 u8 save_if_interesting(afl_state_t *, void *, u32, u8);
 u8 has_new_bits(afl_state_t *, u8 *);
+u8 check_new_bits(afl_state_t *, u8 *);
 #ifndef AFL_SHOWMAP
 void classify_counts(afl_forkserver_t *);
 #endif
