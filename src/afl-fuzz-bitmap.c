@@ -677,8 +677,8 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
     /* Keep only if there are new bits in the map, add to queue for
        future fuzzing, etc. */
     calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
-
-    if (likely(!new_bits)) {
+    
+    if ((afl->has_saturated && !new_bits) || (!afl->has_saturated && new_bits != 2)) {
 
       if (san_fault == FSRV_RUN_OK) {
 
