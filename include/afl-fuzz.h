@@ -1226,6 +1226,7 @@ u32  count_non_255_bytes(afl_state_t *, u8 *);
 void simplify_trace(afl_state_t *, u8 *);
 #ifdef WORD_SIZE_64
 void discover_word(u8 *ret, u64 *current, u64 *virgin);
+void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin);
 #else
 void discover_word(u8 *ret, u32 *current, u32 *virgin);
 #endif
