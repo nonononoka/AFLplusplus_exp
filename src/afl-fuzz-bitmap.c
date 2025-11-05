@@ -251,6 +251,41 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
 
 }
 
+inline u8 has_new_bits_only_update_new_edge(afl_state_t *afl, u8 *virgin_map) {
+
+#ifdef WORD_SIZE_64
+
+  u64 *current = (u64 *)afl->fsrv.trace_bits;
+  u64 *virgin = (u64 *)virgin_map;
+
+  u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
+
+#else
+
+  u32 *current = (u32 *)afl->fsrv.trace_bits;
+  u32 *virgin = (u32 *)virgin_map;
+
+  u32 i = ((afl->fsrv.real_map_size + 3) >> 2);
+
+#endif                                                     /* ^WORD_SIZE_64 */
+
+  u8 ret = 0;
+  while (i--) {
+
+    if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
+
+    current++;
+    virgin++;
+
+  }
+
+  if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
+    afl->bitmap_changed = 1;
+
+  return ret;
+
+}
+
 /* A combination of classify_counts and has_new_bits. If 0 is returned, then the
  * trace bits are kept as-is. Otherwise, the trace bits are overwritten with
  * classified values.
