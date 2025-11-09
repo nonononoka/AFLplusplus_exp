@@ -613,14 +613,19 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
           afl->plot_prev_ed, t_bytes, afl->total_crashes,
           (u32)afl->san_binary_length);                    /* ignore errors */
   
-  if (!afl->has_saturated){
+  if (delta < 21600000){ // 6時間前までの場合
     if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*900){
-      if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 0.01){
-        afl->has_saturated = 1;
-        ACTF("has saturated!");
+      // およそ15分くらい時間が経ったら、1024ずつ見ていって、上昇率が低いところは回数を見るようにして、高いところは0/1にする
+      for (unsigned int i = 0; i < get_map_size() / 1024 + 1; i++){
+        if(((double)(afl->score_by_area[i] - afl->prev_score_by_area[i]) / (double)afl->prev_score_by_area[i]) <= 0.01){ // 一番初めはinfになるので、ここは絶対else
+          afl->has_saturated_by_area[i] = 1;
+          ACTF("has saturated! : %u - %u", i * 1024, (i+1)*1024);
+        } else{ // 再び探索を始めたら0/1にする
+          afl->has_saturated_by_area[i] = 0;
+        }
       }
-      afl->prev_total_edge_found_in_15_minutes = t_bytes;
-      afl->last_updated_execs = afl->plot_prev_ed; // 今までの実行回数
+      afl->last_updated_execs = afl->plot_prev_ed;
+      memcpy(afl->prev_score_by_area, afl->score_by_area, get_map_size() / 1024 + 1);
     }
   }
 

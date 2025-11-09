@@ -171,6 +171,7 @@ u32 count_non_255_bytes(afl_state_t *afl, u8 *mem) {
   u32 *ptr = (u32 *)mem;
   u32  i = ((afl->fsrv.real_map_size + 3) >> 2);
   u32  ret = 0;
+  int j = 0;
 
   while (i--) {
 
@@ -178,12 +179,14 @@ u32 count_non_255_bytes(afl_state_t *afl, u8 *mem) {
 
     /* This is called on the virgin bitmap, so optimize for the most likely
        case. */
-
+    int cnt = 0;
     if (likely(v == 0xffffffffU)) { continue; }
-    if ((v & 0x000000ffU) != 0x000000ffU) { ++ret; }
-    if ((v & 0x0000ff00U) != 0x0000ff00U) { ++ret; }
-    if ((v & 0x00ff0000U) != 0x00ff0000U) { ++ret; }
-    if ((v & 0xff000000U) != 0xff000000U) { ++ret; }
+    if ((v & 0x000000ffU) != 0x000000ffU) { ++ret; cnt++;}
+    if ((v & 0x0000ff00U) != 0x0000ff00U) { ++ret; cnt++;}
+    if ((v & 0x00ff0000U) != 0x00ff0000U) { ++ret; cnt++;}
+    if ((v & 0xff000000U) != 0xff000000U) { ++ret; cnt++;}
+    afl->score_by_area[j / 1024] += cnt;
+    j += 4;
 
   }
 
@@ -278,13 +281,17 @@ inline u8 has_new_bits_only_new_edge(afl_state_t *afl, u8 *virgin_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
 
   u8 ret = 0;
+  int j = 0;
   while (i--) {
-
-    if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
+    if(!afl->has_saturated_by_area[j / 1024]){
+      if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
+    } else{
+      if (unlikely(*current)) discover_word(&ret, current, virgin);
+    }
 
     current++;
     virgin++;
-
+    j += 4;
   }
 
   if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
@@ -773,14 +780,10 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
 
     /* Keep only if there are new bits in the map, add to queue for
        future fuzzing, etc. */
-    // 飽和していない場合は、回数変化のみのシードは加えない
-    if (!afl->has_saturated){
-      calculate_new_bits_if_necessary_only_new_edge(afl, &new_bits, &bits_counted, &classified);
-    } else{
-      calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
-    }
+    // 回数変化のみのシードは加えない
+    calculate_new_bits_if_necessary_only_new_edge(afl, &new_bits, &bits_counted, &classified);
     
-    if ((afl->has_saturated && !new_bits) || (!afl->has_saturated && new_bits != 2)) {
+    if (likely(!new_bits)) {
 
       if (san_fault == FSRV_RUN_OK) {
 
