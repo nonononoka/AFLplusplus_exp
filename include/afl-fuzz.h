@@ -884,7 +884,7 @@ typedef struct afl_state {
 
   u64 prev_total_edge_found_in_15_minutes;
 
-  u64 last_updated_delta;
+  u64 last_updated_execs;
 
 #ifdef INTROSPECTION
   char  mutation[8072];
