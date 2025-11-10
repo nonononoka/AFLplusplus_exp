@@ -1395,6 +1395,30 @@ u32 get_map_size(void) {
 
 }
 
+/* Reads the new-edge power multiplier from ENV */
+u8 get_new_edge_power(void) {
+
+  u32  power = 1;
+  char *ptr;
+
+  if ((ptr = getenv("AFL_NEW_EDGE_POWER"))) {
+
+    long val = strtol(ptr, NULL, 10);
+    if (val < 1 || val > 255) {
+
+      FATAL("illegal AFL_NEW_EDGE_POWER %ld, must be between %u and %u", val,
+            1U, 255U);
+
+    }
+
+    power = (u32)val;
+
+  }
+
+  return (u8)power;
+
+}
+
 /* Create a stream file */
 
 FILE *create_ffile(u8 *fn, mode_t mode) {
@@ -1476,4 +1500,3 @@ void remove_nyx_tmp_workdir(afl_forkserver_t *fsrv, char *nyx_out_dir_path) {
 }
 
 #endif
-

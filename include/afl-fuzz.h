@@ -884,6 +884,8 @@ typedef struct afl_state {
 
   u8 partly_progressing; // saturateしたあとに部分的に探索が始まった場合
 
+  u8 new_edge_power;
+
   u8* coverage_by_area; // areaごとにscoreを割り振る. 
   u8* prev_coverage_by_area; // areaごとにscoreを割り振る. 
   u8* progressing_by_area;

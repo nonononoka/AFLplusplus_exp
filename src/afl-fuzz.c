@@ -370,6 +370,7 @@ static void usage(u8 *argv0, int more_help) {
       "AFL_TRY_AFFINITY: try to bind to an unused core, but don't fail if unsuccessful\n"
       "AFL_NO_ARITH: skip arithmetic mutations in deterministic stage\n"
       "AFL_NO_AUTODICT: do not load an offered auto dictionary compiled into a target\n"
+      "AFL_NEW_EDGE_POWER: boost seeds that find new edges after saturation (1-255)\n"
       "AFL_NO_CPU_RED: avoid red color for showing very high cpu usage\n"
       "AFL_NO_FORKSRV: run target via execve instead of using the forkserver\n"
       "AFL_NO_SNAPSHOT: do not use the snapshot feature (if the snapshot lkm is loaded)\n"
@@ -612,6 +613,7 @@ int main(int argc, char **argv_orig, char **envp) {
   afl_fsrv_init(&afl->fsrv);
   if (debug) { afl->fsrv.debug = true; }
   read_afl_environment(afl, envp);
+  afl->new_edge_power = get_new_edge_power();
   if (afl->shm.map_size) { afl->fsrv.map_size = afl->shm.map_size; }
 
   if (afl->afl_env.afl_forksrv_uid_set) {
@@ -3649,4 +3651,3 @@ stop_fuzzing:
 }
 
 #endif                                                          /* !AFL_LIB */
-
