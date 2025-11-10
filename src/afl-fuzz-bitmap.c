@@ -27,6 +27,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "asanfuzz.h"
 
 u16 count_class_lookup16[65536];
@@ -171,9 +172,30 @@ u32 count_non_255_bytes(afl_state_t *afl, u8 *mem) {
   u32 *ptr = (u32 *)mem;
   u32  i = ((afl->fsrv.real_map_size + 3) >> 2);
   u32  ret = 0;
-  u32  j = 0;
 
-  while (i--) {
+  if(afl->has_saturated){
+    memset(afl->coverage_by_area, 0,
+           afl->area_cnt * sizeof(*afl->coverage_by_area));
+    u32 j = 0;
+    while (i--) {
+
+      u32 v = *(ptr++);
+
+      /* This is called on the virgin bitmap, so optimize for the most likely
+        case. */
+      int cnt = 0;
+      if (likely(v == 0xffffffffU)) { continue; }
+      if ((v & 0x000000ffU) != 0x000000ffU) { ++ret; cnt++;}
+      if ((v & 0x0000ff00U) != 0x0000ff00U) { ++ret; cnt++;}
+      if ((v & 0x00ff0000U) != 0x00ff0000U) { ++ret; cnt++;}
+      if ((v & 0xff000000U) != 0xff000000U) { ++ret; cnt++;}
+      u32 bucket = j / afl->area_divide_size;
+      afl->coverage_by_area[bucket] += cnt;
+      j += 4;
+    }
+  }
+  else{
+    while (i--) {
 
     u32 v = *(ptr++);
 
@@ -181,13 +203,11 @@ u32 count_non_255_bytes(afl_state_t *afl, u8 *mem) {
        case. */
     int cnt = 0;
     if (likely(v == 0xffffffffU)) { continue; }
-    if ((v & 0x000000ffU) != 0x000000ffU) { ++ret; cnt++;}
-    if ((v & 0x0000ff00U) != 0x0000ff00U) { ++ret; cnt++;}
-    if ((v & 0x00ff0000U) != 0x00ff0000U) { ++ret; cnt++;}
-    if ((v & 0xff000000U) != 0xff000000U) { ++ret; cnt++;}
-    u32 bucket = j / afl->area_divide_size;
-    afl->coverage_by_area[bucket] += cnt;
-    j += 4;
+    if ((v & 0x000000ffU) != 0x000000ffU) { ++ret; }
+    if ((v & 0x0000ff00U) != 0x0000ff00U) { ++ret; }
+    if ((v & 0x00ff0000U) != 0x00ff0000U) { ++ret; }
+    if ((v & 0xff000000U) != 0xff000000U) { ++ret; }
+  }
   }
 
   return ret;

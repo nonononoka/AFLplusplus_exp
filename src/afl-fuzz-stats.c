@@ -562,6 +562,34 @@ void write_queue_stats(afl_state_t *afl) {
 
 #endif
 
+/* Count the number of non-255 bytes set in the bitmap. Used strictly for the
+   status screen, several calls per second or so. */
+
+// saturateしたときの、エリアカバレッジをprev_coverage_by_areaに代入する
+void count_coverage_by_area_when_saturated(afl_state_t *afl, u8 *mem) {
+
+  u32 *ptr = (u32 *)mem;
+  u32  i = ((afl->fsrv.real_map_size + 3) >> 2);
+  u32  ret = 0;
+  u32 j = 0;
+
+  while (i--) {
+    u32 v = *(ptr++);
+
+    /* This is called on the virgin bitmap, so optimize for the most likely
+      case. */
+    int cnt = 0;
+    if (likely(v == 0xffffffffU)) { continue; }
+    if ((v & 0x000000ffU) != 0x000000ffU) { cnt++;}
+    if ((v & 0x0000ff00U) != 0x0000ff00U) { cnt++;}
+    if ((v & 0x00ff0000U) != 0x00ff0000U) { cnt++;}
+    if ((v & 0xff000000U) != 0xff000000U) { cnt++;}
+    u32 bucket = j / afl->area_divide_size;
+    afl->prev_coverage_by_area[bucket] += cnt;
+    j += 4;
+  }
+}
+
 /* Update the plot file if there is a reason to. */
 
 void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
@@ -618,6 +646,7 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
       if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 0.01){
         afl->has_saturated = 1;
         ACTF("has saturated!");
+        count_coverage_by_area_when_saturated(afl, afl->virgin_bits);
       }
       afl->prev_total_edge_found_in_15_minutes = t_bytes;
       afl->last_updated_execs = afl->plot_prev_ed; // 今までの実行回数
