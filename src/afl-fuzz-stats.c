@@ -614,7 +614,7 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
           (u32)afl->san_binary_length);                    /* ignore errors */
   
   if (!afl->has_saturated){
-    if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*900){
+    if (unlikely(afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*900)){
       if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 0.01){
         afl->has_saturated = 1;
         ACTF("has saturated!");
@@ -623,21 +623,23 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
       afl->last_updated_execs = afl->plot_prev_ed; // 今までの実行回数
     }
   }
-
-  // saturateしたあとは、どこかのエリアが増えたのを検知したら、そこは0/1に戻す
-  if(afl->has_saturated){
-    for (unsigned int i = 0; i < get_map_size() / 1024 + 1; i++){
-        double ratio = (double)(afl->coverage_by_area[i] - afl->prev_coverage_by_area[i]) / (double)afl->prev_coverage_by_area[i];
-        if(ratio > 0.01){ // まあ1%以上だったら伸びたって思っていいかな
-          afl->progressing_by_area[i] = 1;
-          afl->partly_progressing = 1;
-          ACTF("progressing %d percent! : %u - %u", ratio, i * 1024, (i+1)*1024);
-        } else{ // 伸びなくなったら普通の回数カウントに戻す
-          if(afl->progressing_by_area[i]){
-            afl->progressing_by_area[i] = 0;
-            ACTF("not progressing! : %u - %u, so switch back to default", i * 1024, (i+1)*1024);
-          }
+  else{ // saturateしたあとは、どこかのエリアが増えたのを検知したら、そこは0/1に戻す
+      if (unlikely(afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*900)){
+        afl->partly_progressing = 0; // 一旦0に戻す
+        for (unsigned int i = 0; i < get_map_size() / 1024 + 1; i++){
+            double ratio = (double)(afl->coverage_by_area[i] - afl->prev_coverage_by_area[i]) / (double)afl->prev_coverage_by_area[i];
+            if(ratio > 0.01){ // まあ1%以上だったら伸びたって思っていいかな
+              afl->progressing_by_area[i] = 1;
+              afl->partly_progressing = 1;
+              ACTF("progressing %d percent! : %u - %u", ratio, i * 1024, (i+1)*1024);
+            } else{ // 伸びなくなったら普通の回数カウントに戻す
+              if(afl->progressing_by_area[i]){
+                afl->progressing_by_area[i] = 0;
+                ACTF("not progressing! : %u - %u, so switch back to default", i * 1024, (i+1)*1024);
+              }
+            }
         }
+        afl->last_updated_execs = afl->plot_prev_ed;
     }
   }
 

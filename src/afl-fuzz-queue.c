@@ -1246,7 +1246,6 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
 
   if(afl->has_saturated && q->has_new_cov){
     perf_score *= afl->new_edge_power;
-    ACTF("new edge power: %u", afl->new_edge_power);
   }
 
   /* Adjust score based on bitmap size. The working theory is that better
