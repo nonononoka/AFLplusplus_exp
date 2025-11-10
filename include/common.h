@@ -142,6 +142,8 @@ u8 *u_stringify_time_diff(u8 *buf, u64 cur_ms, u64 event_ms);
 
 /* Reads the map size from ENV */
 u32 get_map_size(void);
+/* Reads the coverage area bucket size from ENV */
+u32 get_area_divide_size(void);
 /* Reads the new-edge power multiplier from ENV */
 u8 get_new_edge_power(void);
 

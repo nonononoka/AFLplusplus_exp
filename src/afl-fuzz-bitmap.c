@@ -171,7 +171,7 @@ u32 count_non_255_bytes(afl_state_t *afl, u8 *mem) {
   u32 *ptr = (u32 *)mem;
   u32  i = ((afl->fsrv.real_map_size + 3) >> 2);
   u32  ret = 0;
-  int j = 0;
+  u32  j = 0;
 
   while (i--) {
 
@@ -185,7 +185,8 @@ u32 count_non_255_bytes(afl_state_t *afl, u8 *mem) {
     if ((v & 0x0000ff00U) != 0x0000ff00U) { ++ret; cnt++;}
     if ((v & 0x00ff0000U) != 0x00ff0000U) { ++ret; cnt++;}
     if ((v & 0xff000000U) != 0xff000000U) { ++ret; cnt++;}
-    afl->coverage_by_area[j / 1024] += cnt;
+    u32 bucket = j / afl->area_divide_size;
+    afl->coverage_by_area[bucket] += cnt;
     j += 4;
   }
 
@@ -322,11 +323,12 @@ inline u8 has_new_bits_partly_progressing(afl_state_t *afl, u8 *virgin_map) {
 
 #endif                                                     /* ^WORD_SIZE_64 */
 
-  u8 ret = 0;
-  int j = 0;
+  u8  ret = 0;
+  u32 j = 0;
   while (i--) {
 
-    if(afl->progressing_count_by_area[j / 1024]){ // このareaはprogressingだから、0/1の探索にする. つまりあんまりビットを埋めない.
+    u32 bucket = j / afl->area_divide_size;
+    if (afl->progressing_count_by_area[bucket]) {
       if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
     } else{
       if (unlikely(*current)) discover_word(&ret, current, virgin);
@@ -1322,4 +1324,3 @@ may_save_fault:
   return keeping;
 
 }
-

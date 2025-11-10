@@ -73,13 +73,15 @@ static list_t afl_states = {.element_prealloc_count = 0};
 
 /* Initializes an afl_state_t. */
 
-void afl_state_init(afl_state_t *afl, uint32_t map_size) {
+void afl_state_init(afl_state_t *afl, uint32_t map_size, u32 area_divide_size) {
 
   /* thanks to this memset, growing vars like out_buf
   and out_size are NULL/0 by default. */
   memset(afl, 0, sizeof(afl_state_t));
 
   afl->shm.map_size = map_size ? map_size : MAP_SIZE;
+  afl->area_divide_size = area_divide_size ? area_divide_size : DEFAULT_AREA_SIZE;
+  afl->area_cnt = afl->shm.map_size / afl->area_divide_size + 1;
 
   afl->w_init = 0.9;
   afl->w_end = 0.3;
@@ -116,9 +118,10 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size) {
   afl->virgin_bits = ck_alloc(map_size);
   afl->virgin_tmout = ck_alloc(map_size);
   afl->virgin_crash = ck_alloc(map_size);
-  afl->coverage_by_area = ck_alloc((map_size / 1024 + 1)*4);
-  afl->prev_coverage_by_area = ck_alloc((map_size / 1024 + 1)*4);
-  afl->progressing_count_by_area = ck_alloc((map_size / 1024 + 1)*4);
+  size_t area_slots_bytes = (size_t)afl->area_cnt * sizeof(u32);
+  afl->coverage_by_area = ck_alloc(area_slots_bytes);
+  afl->prev_coverage_by_area = ck_alloc(area_slots_bytes);
+  afl->progressing_count_by_area = ck_alloc(area_slots_bytes);
   afl->var_bytes = ck_alloc(map_size);
   afl->top_rated = ck_alloc(map_size * sizeof(void *));
   afl->clean_trace = ck_alloc(map_size);
@@ -163,6 +166,30 @@ void afl_resize_map_buffers(afl_state_t *afl, u32 old_size, u32 new_size) {
   afl->clean_trace_custom = ck_realloc(afl->clean_trace_custom, new_size);
   afl->first_trace = ck_realloc(afl->first_trace, new_size);
   afl->map_tmp_buf = ck_realloc(afl->map_tmp_buf, new_size);
+
+  u32 old_area_cnt = afl->area_cnt;
+  u32 new_area_cnt = new_size / afl->area_divide_size + 1;
+  if (new_area_cnt != old_area_cnt) {
+
+    size_t new_area_bytes = (size_t)new_area_cnt * sizeof(u32);
+    afl->coverage_by_area = ck_realloc(afl->coverage_by_area, new_area_bytes);
+    afl->prev_coverage_by_area =
+        ck_realloc(afl->prev_coverage_by_area, new_area_bytes);
+    afl->progressing_count_by_area =
+        ck_realloc(afl->progressing_count_by_area, new_area_bytes);
+
+    if (new_area_cnt > old_area_cnt) {
+
+      size_t area_added = (size_t)(new_area_cnt - old_area_cnt) * sizeof(u32);
+      memset(afl->coverage_by_area + old_area_cnt, 0, area_added);
+      memset(afl->prev_coverage_by_area + old_area_cnt, 0, area_added);
+      memset(afl->progressing_count_by_area + old_area_cnt, 0, area_added);
+
+    }
+
+    afl->area_cnt = new_area_cnt;
+
+  }
 
   if (old_size < new_size) {
 

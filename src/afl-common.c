@@ -1395,6 +1395,30 @@ u32 get_map_size(void) {
 
 }
 
+/* Reads the coverage-area bucket size from ENV */
+u32 get_area_divide_size(void) {
+
+  u32  area_divide_size = DEFAULT_AREA_SIZE;
+  char *ptr;
+
+  if ((ptr = getenv("AFL_AREA_SIZE"))) {
+
+    long val = strtol(ptr, NULL, 10);
+    if (val <= 0 || val > UINT32_MAX) {
+
+      FATAL("illegal AFL_AREA_SIZE %ld, must be between %u and %u", val, 1U,
+            UINT32_MAX);
+
+    }
+
+    area_divide_size = (u32)val;
+
+  }
+
+  return area_divide_size;
+
+}
+
 /* Reads the new-edge power multiplier from ENV */
 u8 get_new_edge_power(void) {
 

@@ -886,9 +886,11 @@ typedef struct afl_state {
 
   u8 new_edge_power;
 
-  u32* coverage_by_area; // areaごとにscoreを割り振る. 
-  u32* prev_coverage_by_area; // areaごとにscoreを割り振る. 
-  u32* progressing_count_by_area; // 何回連続してその領域が増えているか
+  u32  area_divide_size;  // Number of bytes grouped per coverage bucket.
+  u32  area_cnt;    // Total number of coverage buckets.
+  u32 *coverage_by_area; // areaごとにscoreを割り振る. 
+  u32 *prev_coverage_by_area; // areaごとにscoreを割り振る. 
+  u32 *progressing_count_by_area; // 何回連続してその領域が増えているか
 
   u64 prev_total_edge_found_in_15_minutes;
 
@@ -1165,7 +1167,7 @@ struct custom_mutator {
 
 };
 
-void afl_state_init(afl_state_t *, uint32_t map_size);
+void afl_state_init(afl_state_t *, uint32_t map_size, u32 area_divide_size);
 void afl_state_deinit(afl_state_t *);
 void afl_resize_map_buffers(afl_state_t *, u32 old_size, u32 new_size);
 
@@ -1510,4 +1512,3 @@ static inline u8 bitmap_read(u8 *map, u32 index) {
 #endif
 
 #endif
-

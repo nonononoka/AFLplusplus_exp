@@ -43,6 +43,10 @@
    Default: 8MB (defined in bytes) */
 #define DEFAULT_SHMEM_SIZE (8 * 1024 * 1024)
 
+/* Default number of bytes grouped together when tracking coverage per area.
+   This can be overridden at runtime via AFL_AREA_SIZE. */
+#define DEFAULT_AREA_SIZE 1024U
+
 /* Default time until when no more coverage finds are happening afl-fuzz
    switches to exploitation mode. It automatically switches back when new
    coverage is found.
@@ -577,4 +581,3 @@ We add 4 byte for one u32 length field. */
 #define AFL_TXT_STRING_MAX_MUTATIONS 6
 
 #endif                                                  /* ! _HAVE_CONFIG_H */
-
