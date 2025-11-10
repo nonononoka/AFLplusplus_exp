@@ -119,6 +119,7 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size, u32 area_divide_size) {
   afl->virgin_tmout = ck_alloc(map_size);
   afl->virgin_crash = ck_alloc(map_size);
   size_t area_slots_bytes = (size_t)afl->area_cnt * sizeof(u32);
+  ACTF("buffered size: %u", afl->area_cnt);
   afl->coverage_by_area = ck_alloc(area_slots_bytes);
   afl->prev_coverage_by_area = ck_alloc(area_slots_bytes);
   afl->progressing_count_by_area = ck_alloc(area_slots_bytes);
@@ -156,7 +157,7 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size, u32 area_divide_size) {
 }
 
 void afl_resize_map_buffers(afl_state_t *afl, u32 old_size, u32 new_size) {
-
+  ACTF("resize map buffer: %u", new_size);
   afl->virgin_bits = ck_realloc(afl->virgin_bits, new_size);
   afl->virgin_tmout = ck_realloc(afl->virgin_tmout, new_size);
   afl->virgin_crash = ck_realloc(afl->virgin_crash, new_size);

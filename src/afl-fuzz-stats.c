@@ -586,6 +586,7 @@ void count_coverage_by_area_when_saturated(afl_state_t *afl, u8 *mem) {
     if ((v & 0xff000000U) != 0xff000000U) { cnt++;}
     u32 bucket = j / afl->area_divide_size;
     afl->prev_coverage_by_area[bucket] += cnt;
+    ACTF("map size: %u %u", bucket, afl->prev_coverage_by_area[bucket]);
     j += 4;
   }
 }
@@ -642,10 +643,11 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
           (u32)afl->san_binary_length);                    /* ignore errors */
   
   if (!afl->has_saturated){
-    if (unlikely(afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*900)){
-      if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 0.01){
+    if (unlikely(afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*10)){
+      if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 10000){
         afl->has_saturated = 1;
         ACTF("has saturated!");
+        ACTF("real map size: %u", afl->fsrv.real_map_size);
         count_coverage_by_area_when_saturated(afl, afl->virgin_bits);
       }
       afl->prev_total_edge_found_in_15_minutes = t_bytes;
@@ -654,7 +656,7 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
   }
   else{ // saturateしたあとは、どこかのエリアが増えたのを検知したら、そこは0/1に戻す
       afl->partly_progressing = 0; // 一旦0に戻す
-      for (u32 i = 0; i < afl->area_cnt; i++) {
+      for (u32 i = 0; i < (afl->fsrv.real_map_size / afl->area_divide_size + 1); i++) {
           // double ratio = (double)(afl->coverage_by_area[i] - afl->prev_coverage_by_area[i]) / (double)afl->prev_coverage_by_area[i];
           // if(ratio > 0.01){ // まあ1%以上だったら伸びたって思っていいかな
           //   afl->progressing_by_area[i] = 1;
