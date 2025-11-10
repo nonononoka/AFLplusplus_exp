@@ -886,9 +886,9 @@ typedef struct afl_state {
 
   u8 new_edge_power;
 
-  u8* coverage_by_area; // areaごとにscoreを割り振る. 
-  u8* prev_coverage_by_area; // areaごとにscoreを割り振る. 
-  u8* progressing_by_area;
+  u32* coverage_by_area; // areaごとにscoreを割り振る. 
+  u32* prev_coverage_by_area; // areaごとにscoreを割り振る. 
+  u32* progressing_count_by_area; // 何回連続してその領域が増えているか
 
   u64 prev_total_edge_found_in_15_minutes;
 

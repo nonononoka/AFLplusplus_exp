@@ -326,7 +326,7 @@ inline u8 has_new_bits_partly_progressing(afl_state_t *afl, u8 *virgin_map) {
   int j = 0;
   while (i--) {
 
-    if(unlikely(afl->progressing_by_area[j / 1024])){ // このareaはprogressingだから、0/1の探索にする. つまりあんまりビットを埋めない.
+    if(afl->progressing_count_by_area[j / 1024]){ // このareaはprogressingだから、0/1の探索にする. つまりあんまりビットを埋めない.
       if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
     } else{
       if (unlikely(*current)) discover_word(&ret, current, virgin);

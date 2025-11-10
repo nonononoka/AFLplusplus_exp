@@ -116,9 +116,9 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size) {
   afl->virgin_bits = ck_alloc(map_size);
   afl->virgin_tmout = ck_alloc(map_size);
   afl->virgin_crash = ck_alloc(map_size);
-  afl->coverage_by_area = ck_alloc(map_size / 1024 + 1);
-  afl->coverage_by_area = ck_alloc(map_size / 1024 + 1);
-  afl->progressing_by_area = ck_alloc(map_size / 1024 + 1);
+  afl->coverage_by_area = ck_alloc((map_size / 1024 + 1)*4);
+  afl->prev_coverage_by_area = ck_alloc((map_size / 1024 + 1)*4);
+  afl->progressing_count_by_area = ck_alloc((map_size / 1024 + 1)*4);
   afl->var_bytes = ck_alloc(map_size);
   afl->top_rated = ck_alloc(map_size * sizeof(void *));
   afl->clean_trace = ck_alloc(map_size);
