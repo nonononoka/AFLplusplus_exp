@@ -1270,6 +1270,7 @@ void load_stats_file(afl_state_t *);
 void write_setup_file(afl_state_t *, u32, char **);
 void write_stats_file(afl_state_t *, u32, double, double, double);
 void maybe_update_plot_file(afl_state_t *, u32, double, double);
+void count_coverage_by_area_when_saturated(afl_state_t *, u8 *);
 void write_queue_stats(afl_state_t *);
 void show_stats(afl_state_t *);
 void show_stats_normal(afl_state_t *);

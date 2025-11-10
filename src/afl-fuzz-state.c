@@ -81,7 +81,7 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size, u32 area_divide_size) {
 
   afl->shm.map_size = map_size ? map_size : MAP_SIZE;
   afl->area_divide_size = area_divide_size ? area_divide_size : DEFAULT_AREA_SIZE;
-  afl->area_cnt = afl->shm.map_size / afl->area_divide_size + 1;
+  afl->area_cnt = map_size / afl->area_divide_size + 1;
 
   afl->w_init = 0.9;
   afl->w_end = 0.3;
