@@ -880,7 +880,13 @@ typedef struct afl_state {
 
   s64 last_scored_idx;           /* Index of the last queue entry re-scored */
 
-  u8 has_saturated;
+  u8 has_saturated; // saturateしたか否か
+
+  u8 partly_progressing; // saturateしたあとに部分的に探索が始まった場合
+
+  u8* coverage_by_area; // areaごとにscoreを割り振る. 
+  u8* prev_coverage_by_area; // areaごとにscoreを割り振る. 
+  u8* progressing_by_area;
 
   u64 prev_total_edge_found_in_15_minutes;
 

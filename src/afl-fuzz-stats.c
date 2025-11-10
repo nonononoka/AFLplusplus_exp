@@ -624,6 +624,23 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
     }
   }
 
+  // saturateしたあとは、どこかのエリアが増えたのを検知したら、そこは0/1に戻す
+  if(afl->has_saturated){
+    for (unsigned int i = 0; i < get_map_size() / 1024 + 1; i++){
+        double ratio = (double)(afl->coverage_by_area[i] - afl->prev_coverage_by_area[i]) / (double)afl->prev_coverage_by_area[i];
+        if(ratio > 0.01){ // まあ1%以上だったら伸びたって思っていいかな
+          afl->progressing_by_area[i] = 1;
+          afl->partly_progressing = 1;
+          ACTF("progressing %d percent! : %u - %u", ratio, i * 1024, (i+1)*1024);
+        } else{ // 伸びなくなったら普通の回数カウントに戻す
+          if(afl->progressing_by_area[i]){
+            afl->progressing_by_area[i] = 0;
+            ACTF("not progressing! : %u - %u, so switch back to default", i * 1024, (i+1)*1024);
+          }
+        }
+    }
+  }
+
   for (u32 i = 0; i < afl->san_binary_length; i++) {
 
     fprintf(afl->fsrv.plot_file, ", %llu", afl->san_fsrvs[i].total_execs);

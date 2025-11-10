@@ -131,7 +131,7 @@ inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
 
       /* Looks like we have not found any new bytes yet; see if any non-zero
          bytes in current[] are pristine in virgin[]. */
-      if(*ret < 2){*ret = 1;} // *current & *virginが>0ということはbitmapに変化があったっていうことだから最低でも1はある
+
       if (cur[0] && vir[0] == 0xff) {
         *ret = 2;
         vir[0] &= ~cur[0];

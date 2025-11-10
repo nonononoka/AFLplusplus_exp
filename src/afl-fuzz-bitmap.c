@@ -171,6 +171,7 @@ u32 count_non_255_bytes(afl_state_t *afl, u8 *mem) {
   u32 *ptr = (u32 *)mem;
   u32  i = ((afl->fsrv.real_map_size + 3) >> 2);
   u32  ret = 0;
+  int j = 0;
 
   while (i--) {
 
@@ -178,13 +179,14 @@ u32 count_non_255_bytes(afl_state_t *afl, u8 *mem) {
 
     /* This is called on the virgin bitmap, so optimize for the most likely
        case. */
-
+    int cnt = 0;
     if (likely(v == 0xffffffffU)) { continue; }
-    if ((v & 0x000000ffU) != 0x000000ffU) { ++ret; }
-    if ((v & 0x0000ff00U) != 0x0000ff00U) { ++ret; }
-    if ((v & 0x00ff0000U) != 0x00ff0000U) { ++ret; }
-    if ((v & 0xff000000U) != 0xff000000U) { ++ret; }
-
+    if ((v & 0x000000ffU) != 0x000000ffU) { ++ret; cnt++;}
+    if ((v & 0x0000ff00U) != 0x0000ff00U) { ++ret; cnt++;}
+    if ((v & 0x00ff0000U) != 0x00ff0000U) { ++ret; cnt++;}
+    if ((v & 0xff000000U) != 0xff000000U) { ++ret; cnt++;}
+    afl->coverage_by_area[j / 1024] += cnt;
+    j += 4;
   }
 
   return ret;
@@ -294,6 +296,55 @@ inline u8 has_new_bits_only_new_edge(afl_state_t *afl, u8 *virgin_map) {
 
 }
 
+/* Check if the current execution path brings anything new to the table.
+   Update virgin bits to reflect the finds. Returns 1 if the only change is
+   the hit-count for a particular tuple; 2 if there are new tuples seen.
+   Updates the map, so subsequent calls will always return 0.
+
+   This function is called after every exec() on a fairly large buffer, so
+   it needs to be fast. We do this in 32-bit and 64-bit flavors. */
+
+inline u8 has_new_bits_partly_progressing(afl_state_t *afl, u8 *virgin_map) {
+
+#ifdef WORD_SIZE_64
+
+  u64 *current = (u64 *)afl->fsrv.trace_bits;
+  u64 *virgin = (u64 *)virgin_map;
+
+  u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
+
+#else
+
+  u32 *current = (u32 *)afl->fsrv.trace_bits;
+  u32 *virgin = (u32 *)virgin_map;
+
+  u32 i = ((afl->fsrv.real_map_size + 3) >> 2);
+
+#endif                                                     /* ^WORD_SIZE_64 */
+
+  u8 ret = 0;
+  int j = 0;
+  while (i--) {
+
+    if(unlikely(afl->progressing_by_area[j / 1024])){ // このareaはprogressingだから、0/1の探索にする. つまりあんまりビットを埋めない.
+      if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
+    } else{
+      if (unlikely(*current)) discover_word(&ret, current, virgin);
+    }
+
+    current++;
+    virgin++;
+    j+=4;
+
+  }
+
+  if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
+    afl->bitmap_changed = 1;
+
+  return ret;
+
+}
+
 /* A combination of classify_counts and has_new_bits. If 0 is returned, then the
  * trace bits are kept as-is. Otherwise, the trace bits are overwritten with
  * classified values.
@@ -357,6 +408,39 @@ static inline u8 has_new_bits_unclassified_only_new_edge(afl_state_t *afl, u8 *v
   classify_counts(&afl->fsrv);
   *classified = true;
   return has_new_bits_only_new_edge(afl, virgin_map);
+
+}
+
+/* A combination of classify_counts and has_new_bits. If 0 is returned, then the
+ * trace bits are kept as-is. Otherwise, the trace bits are overwritten with
+ * classified values.
+ *
+ * This accelerates the processing: in most cases, no interesting behavior
+ * happen, and the trace bits will be discarded soon. This function optimizes
+ * for such cases: one-pass scan on trace bits without modifying anything. Only
+ * on rare cases it fall backs to the slow path: classify_counts() first, then
+ * return has_new_bits(). */
+
+static inline u8 has_new_bits_unclassified_partly_progressing(afl_state_t *afl, u8 *virgin_map,
+                                           bool *classified) {
+
+  /* Handle the hot path first: no new coverage */
+  u8 *end = afl->fsrv.trace_bits + afl->fsrv.map_size;
+
+#ifdef WORD_SIZE_64
+
+  if (!skim((u64 *)virgin_map, (u64 *)afl->fsrv.trace_bits, (u64 *)end))
+    return 0;
+
+#else
+
+  if (!skim((u32 *)virgin_map, (u32 *)afl->fsrv.trace_bits, (u32 *)end))
+    return 0;
+
+#endif                                                     /* ^WORD_SIZE_64 */
+  classify_counts(&afl->fsrv);
+  *classified = true;
+  return has_new_bits_partly_progressing(afl, virgin_map);
 
 }
 
@@ -621,6 +705,27 @@ static inline void calculate_new_bits_if_necessary_only_new_edge(afl_state_t *af
 
 }
 
+static inline void calculate_new_bits_if_necessary_partly_progressing(afl_state_t *afl,
+                                                   u8          *new_bits,
+                                                   bool        *bits_counted,
+                                                   bool        *classified) {
+
+  if (*bits_counted) return;
+
+  if (*classified) {
+
+    *new_bits = has_new_bits_partly_progressing(afl, afl->virgin_bits);
+
+  } else {
+
+    *new_bits = has_new_bits_unclassified_partly_progressing(afl, afl->virgin_bits, classified);
+
+  }
+
+  *bits_counted = true;
+
+}
+
 /* Check if the result of an execve() during routine fuzzing is interesting,
    save or queue the input test case for further analysis if so. Returns 1 if
    entry is saved, 0 otherwise. */
@@ -773,11 +878,15 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
 
     /* Keep only if there are new bits in the map, add to queue for
        future fuzzing, etc. */
-    // 飽和していない場合は、回数変化のみのシードは加えない
+    // saturateしていない場合は、回数変化のみのシードは加えない
     if (!afl->has_saturated){
       calculate_new_bits_if_necessary_only_new_edge(afl, &new_bits, &bits_counted, &classified);
     } else{
-      calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
+      if(afl->partly_progressing){
+        calculate_new_bits_if_necessary_partly_progressing(afl, &new_bits, &bits_counted, &classified);
+      } else{
+        calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
+      }
     }
     
     if ((afl->has_saturated && !new_bits) || (!afl->has_saturated && new_bits != 2)) {
