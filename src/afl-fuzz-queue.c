@@ -130,7 +130,7 @@ void create_alias_table(afl_state_t *afl) {
 
           }
 
-          if(afl->has_saturated && q->has_new_cov){ // 新規エッジを発見したシードについてはweightを高くする
+          if(afl->has_saturated_0_1 && q->has_new_cov){ // 新規エッジを発見したシードについてはweightを高くする
             weight *= 2;
           }
 
@@ -1244,7 +1244,7 @@ u32 calculate_score(afl_state_t *afl, struct queue_entry *q) {
 
   }
 
-  if(afl->has_saturated && q->has_new_cov){
+  if(afl->has_saturated_0_1 && q->has_new_cov){
     perf_score *= 2;
   }
 
