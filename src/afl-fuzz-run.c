@@ -542,7 +542,10 @@ u8 calibrate_case(afl_state_t *afl, struct queue_entry *q, u8 *use_mem,
   if (q->exec_cksum) {
 
     memcpy(afl->first_trace, afl->fsrv.trace_bits, afl->fsrv.map_size);
-    hnb = has_new_bits(afl, afl->virgin_bits);
+    hnb = has_new_bits(afl, afl->virgin_bits); 
+    // これがもしほんとなら、普通に今通ったところは全部埋めていることになる
+    // つまり、回数変化だけのやつは飛ばしていて、新しいエッジを発見したところだけ入れている、ここまでは予想通り
+    ACTF("has new bits in calibrate case");
     if (unlikely(hnb > new_bits)) { new_bits = hnb; }
 
   }

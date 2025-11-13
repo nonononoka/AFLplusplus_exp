@@ -217,7 +217,7 @@ void init_count_class16(void) {
    it needs to be fast. We do this in 32-bit and 64-bit flavors. */
 
 inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
-
+  ACTF("called has new bits");
 #ifdef WORD_SIZE_64
 
   u64 *current = (u64 *)afl->fsrv.trace_bits;

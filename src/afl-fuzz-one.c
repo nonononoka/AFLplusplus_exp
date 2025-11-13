@@ -382,7 +382,7 @@ u8 fuzz_one_original(afl_state_t *afl) {
 
     }
 
-  } else if (!afl->non_instrumented_mode && !afl->queue_cur->favored &&
+  } else if (!afl->has_saturated && !afl->non_instrumented_mode && !afl->queue_cur->favored &&
 
              afl->queued_items > 10) {
 
