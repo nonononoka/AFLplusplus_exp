@@ -294,6 +294,51 @@ inline u8 has_new_bits_only_new_edge(afl_state_t *afl, u8 *virgin_map) {
 
 }
 
+/* Check if the current execution path brings anything new to the table.
+   Update virgin bits to reflect the finds. Returns 1 if the only change is
+   the hit-count for a particular tuple; 2 if there are new tuples seen.
+   Updates the map, so subsequent calls will always return 0.
+
+   This function is called after every exec() on a fairly large buffer, so
+   it needs to be fast. We do this in 32-bit and 64-bit flavors. */
+
+inline u32 has_new_bits_distant_bit(afl_state_t *afl, u8 *virgin_map, u32* score) {
+
+#ifdef WORD_SIZE_64
+
+  u64 *current = (u64 *)afl->fsrv.trace_bits;
+  u64 *virgin = (u64 *)virgin_map;
+
+  u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
+
+#else
+
+  u32 *current = (u32 *)afl->fsrv.trace_bits;
+  u32 *virgin = (u32 *)virgin_map;
+
+  u32 i = ((afl->fsrv.real_map_size + 3) >> 2);
+
+#endif                                                     /* ^WORD_SIZE_64 */
+
+  u8 ret = 0;
+  u32 new_edge_count = 0;
+  u32 count_sum = 0;
+  while (i--) {
+
+    if (unlikely(*current)) discover_word_distant_bit(&ret, current, virgin, &new_edge_count, &count_sum);
+
+    current++;
+    virgin++;
+
+  }
+
+  if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
+    afl->bitmap_changed = 1;
+
+  *score = count_sum +  4* new_edge_count;
+  return ret;
+}
+
 /* A combination of classify_counts and has_new_bits. If 0 is returned, then the
  * trace bits are kept as-is. Otherwise, the trace bits are overwritten with
  * classified values.
@@ -357,6 +402,39 @@ static inline u8 has_new_bits_unclassified_only_new_edge(afl_state_t *afl, u8 *v
   classify_counts(&afl->fsrv);
   *classified = true;
   return has_new_bits_only_new_edge(afl, virgin_map);
+
+}
+
+/* A combination of classify_counts and has_new_bits. If 0 is returned, then the
+ * trace bits are kept as-is. Otherwise, the trace bits are overwritten with
+ * classified values.
+ *
+ * This accelerates the processing: in most cases, no interesting behavior
+ * happen, and the trace bits will be discarded soon. This function optimizes
+ * for such cases: one-pass scan on trace bits without modifying anything. Only
+ * on rare cases it fall backs to the slow path: classify_counts() first, then
+ * return has_new_bits(). */
+
+static inline u32 has_new_bits_unclassified_distant_bit(afl_state_t *afl, u8 *virgin_map,
+                                           bool *classified, u32* score) {
+
+  /* Handle the hot path first: no new coverage */
+  u8 *end = afl->fsrv.trace_bits + afl->fsrv.map_size;
+
+#ifdef WORD_SIZE_64
+
+  if (!skim((u64 *)virgin_map, (u64 *)afl->fsrv.trace_bits, (u64 *)end))
+    return 0;
+
+#else
+
+  if (!skim((u32 *)virgin_map, (u32 *)afl->fsrv.trace_bits, (u32 *)end))
+    return 0;
+
+#endif                                                     /* ^WORD_SIZE_64 */
+  classify_counts(&afl->fsrv);
+  *classified = true;
+  return has_new_bits_distant_bit(afl, virgin_map, score);
 
 }
 
@@ -621,6 +699,27 @@ static inline void calculate_new_bits_if_necessary_only_new_edge(afl_state_t *af
 
 }
 
+static inline u32 calculate_new_bits_if_necessary_distant_bit(afl_state_t *afl,
+                                                   u8          *new_bits,
+                                                   bool        *bits_counted,
+                                                   bool        *classified) {
+
+  // if (*bits_counted) return;
+  u32 score = 0;                                                  
+  if (*classified) {
+
+    *new_bits = has_new_bits_distant_bit(afl, afl->virgin_bits, &score);
+
+  } else {
+
+    *new_bits = has_new_bits_unclassified_distant_bit(afl, afl->virgin_bits, classified, &score);
+
+  }
+
+  *bits_counted = true;
+  return score;
+}
+
 /* Check if the result of an execve() during routine fuzzing is interesting,
    save or queue the input test case for further analysis if so. Returns 1 if
    entry is saved, 0 otherwise. */
@@ -776,6 +875,9 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
     // 飽和していない場合は、回数変化のみのシードは加えない
     if (!afl->has_saturated){
       calculate_new_bits_if_necessary_only_new_edge(afl, &new_bits, &bits_counted, &classified);
+    } else if(!afl->has_ended){
+      u32 score = calculate_new_bits_if_necessary_distant_bit(afl, &new_bits, &bits_counted, &classified);
+      ACTF("score: %u", score);
     } else{
       calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
     }

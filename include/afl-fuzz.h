@@ -882,6 +882,8 @@ typedef struct afl_state {
 
   u8 has_saturated;
 
+  u8 has_ended;
+
   u64 prev_total_edge_found_in_15_minutes;
 
   u64 last_updated_execs;
@@ -1227,6 +1229,8 @@ void simplify_trace(afl_state_t *, u8 *);
 #ifdef WORD_SIZE_64
 void discover_word(u8 *ret, u64 *current, u64 *virgin);
 void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin);
+void discover_word_distant_bit(u8 *ret, u64 *current, u64 *virgin, u32* new_edge_count, u32* count_sum);
+void bit_distance_8(u8 cur, u8 vir, u32* count_sum);
 #else
 void discover_word(u8 *ret, u32 *current, u32 *virgin);
 #endif

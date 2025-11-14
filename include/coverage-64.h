@@ -114,58 +114,113 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
 
 /* Updates the virgin bits, then reflects whether a new count or a new tuple is
  * seen in ret. */
-// 新しいエッジがビットを立てたところだけ、ビットを更新したい
-// 新規エッジが立ったところだけビットを埋める
+// 回数変化だけか否かを判定
+// ビットは更新しない(calibrate caseでどうせビットは更新するから)
 inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
 
-  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
+    /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
      that have not been already cleared from the virgin map - since this will
      almost always be the case. */
 
   if (*current & *virgin) {
 
-    // if (likely(*ret < 2)) {
+    if (likely(*ret < 2)) {
 
       u8 *cur = (u8 *)current;
       u8 *vir = (u8 *)virgin;
 
       /* Looks like we have not found any new bytes yet; see if any non-zero
          bytes in current[] are pristine in virgin[]. */
-      if(*ret < 2){*ret = 1;} // *current & *virginが>0ということはbitmapに変化があったっていうことだから最低でも1はある
-      if (cur[0] && vir[0] == 0xff) {
-        *ret = 2;
-        vir[0] &= ~cur[0];
-      }
-      if (cur[1] && vir[1] == 0xff) {
-        *ret = 2;
-        vir[1] &= ~cur[1];
-      }
-      if (cur[2] && vir[2] == 0xff) {
-        *ret = 2;
-        vir[2] &= ~cur[2];
-      }
-      if (cur[3] && vir[3] == 0xff) {
-        *ret = 2;
-        vir[3] &= ~cur[3];
-      }
-      if (cur[4] && vir[4] == 0xff) {
-        *ret = 2;
-        vir[4] &= ~cur[4];
-      }
-      if (cur[5] && vir[5] == 0xff) {
-        *ret = 2;
-        vir[5] &= ~cur[5];
-      }
-      if (cur[6] && vir[6] == 0xff) {
-        *ret = 2;
-        vir[6] &= ~cur[6];
-      }
-      if (cur[7] && vir[7] == 0xff) {
-        *ret = 2;
-        vir[7] &= ~cur[7];
-      }
 
-    // }
+      if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
+          (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
+          (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
+          (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff))
+        *ret = 2;
+      else
+        *ret = 1;
+
+    }
+
+  }
+
+}
+
+inline void bit_distance_8(u8 cur, u8 vir, u32* count_sum) {
+  if(vir == 0){return;}
+  /* cur に立っているビットの位置を取得（最大 1bit のケース想定） */
+  int cur_pos = -1;
+  for (int i = 0; i < 8; i++) {
+    if (cur & (1 << i)) {
+      cur_pos = i;
+      break;  // cur[0] は普通 1bit だけなのでこれで十分
+    }
+  }
+
+  if (cur_pos == -1) return;  // cur に 1 が無い場合
+
+  /* vir の bit の位置を列挙して距離を計算 */
+  u32 sum = 0;
+  u32 count = 0;
+
+  for (int i = 0; i < 8; i++) {
+    if (vir & (1 << i)) {
+      sum += abs(cur_pos - i);
+      count++;
+    }
+  }
+
+  *count_sum += (sum / count);
+}
+
+/* Updates the virgin bits, then reflects whether a new count or a new tuple is
+ * seen in ret. */
+// どれくらいビットマップに変化をもたらすかを判定する
+// ビットは更新しない(calibrate caseでどうせビットは更新するから)
+inline void discover_word_distant_bit(u8 *ret, u64 *current, u64 *virgin, u32* new_edge_count, u32* count_sum) {
+
+    /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
+     that have not been already cleared from the virgin map - since this will
+     almost always be the case. */
+
+  if (*current & *virgin) {
+
+      u8 *cur = (u8 *)current;
+      u8 *vir = (u8 *)virgin;
+
+      /* Looks like we have not found any new bytes yet; see if any non-zero
+         bytes in current[] are pristine in virgin[]. */
+      for (int i = 0; i < 8; i++) {
+        if (cur[i] && vir[i] == 0xff) {
+          *ret = 2;
+          *new_edge_count += 1;
+        }
+      }
+      if(*ret != 2){*ret = 1;}
+      if((cur[0] & vir[0])){
+        bit_distance_8(cur[0], ~vir[0], count_sum);
+      }
+      if((cur[1] & vir[1])){
+        bit_distance_8(cur[1], ~vir[1], count_sum);
+      }
+      if((cur[2] & vir[2])){
+        bit_distance_8(cur[1], ~vir[1], count_sum);
+      }
+      if((cur[3] & vir[3])){
+        bit_distance_8(cur[1], ~vir[1], count_sum);
+      }
+      if((cur[4] & vir[4])){
+        bit_distance_8(cur[1], ~vir[1], count_sum);
+      }
+      if((cur[5] & vir[5])){
+        bit_distance_8(cur[1], ~vir[1], count_sum);
+      }
+      if((cur[6] & vir[6])){
+        bit_distance_8(cur[1], ~vir[1], count_sum);
+      }
+      if((cur[7] & vir[7])){
+        bit_distance_8(cur[1], ~vir[1], count_sum);
+      }
 
   }
 
