@@ -81,7 +81,6 @@ inline void classify_counts(afl_forkserver_t *fsrv) {
 /* Updates the virgin bits, then reflects whether a new count or a new tuple is
  * seen in ret. */
 inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
-
   /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
      that have not been already cleared from the virgin map - since this will
      almost always be the case. */
@@ -116,6 +115,7 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
  * seen in ret. */
 // 新しいエッジがビットを立てたところだけ、ビットを更新したい
 // 新規エッジが立ったところだけビットを埋める
+// この場合返すのは、0か2のみ
 inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
 
   /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
@@ -131,7 +131,6 @@ inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
 
       /* Looks like we have not found any new bytes yet; see if any non-zero
          bytes in current[] are pristine in virgin[]. */
-      if(*ret < 2){*ret = 1;} // *current & *virginが>0ということはbitmapに変化があったっていうことだから最低でも1はある
       if (cur[0] && vir[0] == 0xff) {
         *ret = 2;
         vir[0] &= ~cur[0];
