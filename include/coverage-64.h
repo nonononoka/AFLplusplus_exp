@@ -115,7 +115,9 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
 /* Updates the virgin bits, then reflects whether a new count or a new tuple is
  * seen in ret. */
 // 新しいエッジがビットを立てたところだけ、ビットを更新したい
-// 新規エッジが立ったところだけビットを埋める
+// calibrate caseで、bitmapの更新は、し直すから、ここでは2か1かの判定だけすれば良い
+// 2→bitmapを更新する
+// 1→このシードは追加しないので、calibrate caseは走らない→更新されない
 inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
 
   /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
@@ -124,49 +126,23 @@ inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
 
   if (*current & *virgin) {
 
-    // if (likely(*ret < 2)) {
+    if (likely(*ret < 2)) {
 
       u8 *cur = (u8 *)current;
       u8 *vir = (u8 *)virgin;
 
       /* Looks like we have not found any new bytes yet; see if any non-zero
          bytes in current[] are pristine in virgin[]. */
-      if(*ret < 2){*ret = 1;} // *current & *virginが>0ということはbitmapに変化があったっていうことだから最低でも1はある
-      if (cur[0] && vir[0] == 0xff) {
-        *ret = 2;
-        vir[0] &= ~cur[0];
-      }
-      if (cur[1] && vir[1] == 0xff) {
-        *ret = 2;
-        vir[1] &= ~cur[1];
-      }
-      if (cur[2] && vir[2] == 0xff) {
-        *ret = 2;
-        vir[2] &= ~cur[2];
-      }
-      if (cur[3] && vir[3] == 0xff) {
-        *ret = 2;
-        vir[3] &= ~cur[3];
-      }
-      if (cur[4] && vir[4] == 0xff) {
-        *ret = 2;
-        vir[4] &= ~cur[4];
-      }
-      if (cur[5] && vir[5] == 0xff) {
-        *ret = 2;
-        vir[5] &= ~cur[5];
-      }
-      if (cur[6] && vir[6] == 0xff) {
-        *ret = 2;
-        vir[6] &= ~cur[6];
-      }
-      if (cur[7] && vir[7] == 0xff) {
-        *ret = 2;
-        vir[7] &= ~cur[7];
-      }
 
-    // }
+      if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
+          (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
+          (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
+          (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff))
+        *ret = 2;
+      else
+        *ret = 1;
 
+    }
   }
 
 }
