@@ -234,7 +234,8 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
 
   u8 ret = 0;
-  if(afl->has_saturated){
+  // discover_wordを使うのは、saturateしている かつ depthが今の基準以上のとき
+  if(afl->has_saturated && afl->queue_cur->depth >= afl->threshold_depth){ // どんなシードでも数える
     while (i--) {
 
       if (unlikely(*current)) discover_word(&ret, current, virgin);
@@ -243,7 +244,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
       virgin++;
 
     }
-  }else{
+  }else{ // そもそもsaturateしていない、または、depthが今の基準以下のときはonly new edgeを使う
     while (i--) {
 
       if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
@@ -689,7 +690,7 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
     // 飽和していない場合は、回数変化のみのシードは加えない
     calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
     
-    if ((afl->has_saturated && !new_bits) || (!afl->has_saturated && new_bits != 2)) {
+    if (!new_bits) { // only new edgeの時は、0か2を返すようにしているからこれで大丈夫
 
       if (san_fault == FSRV_RUN_OK) {
 

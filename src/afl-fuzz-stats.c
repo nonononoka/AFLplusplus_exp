@@ -618,10 +618,19 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
       if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 0.01){
         afl->has_saturated = 1;
         ACTF("has saturated!");
+        afl->threshold_depth = 4; // 全体的にsaturateしたので、まずdepthが4以上のシードのみ回数を考慮する
+        afl->last_updated_delta = delta;
       }
       afl->prev_total_edge_found_in_15_minutes = t_bytes;
       afl->last_updated_execs = afl->plot_prev_ed; // 今までの実行回数
     }
+  } else{ // saturateしたら、とりあえず2hずつdepthをだんだん解放していく
+    if(delta - afl->last_updated_delta >= 7200000 && afl->threshold_depth > 0){
+      afl->last_updated_delta = delta;
+      afl->threshold_depth--;
+      ACTF("current threshold depth: %u", afl->threshold_depth);
+    }
+
   }
 
   for (u32 i = 0; i < afl->san_binary_length; i++) {
