@@ -618,7 +618,7 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
       if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 0.01){
         afl->has_saturated = 1;
         ACTF("has saturated!");
-        afl->threshold_depth = 5; // 全体的にsaturateしたので、まずdepthが4以上のシードのみ回数を考慮する
+        afl->threshold_depth = 6; // 全体的にsaturateしたので、まずdepthが4以上のシードのみ回数を考慮する
         afl->last_updated_delta = delta;
       }
       afl->prev_total_edge_found_in_15_minutes = t_bytes;
