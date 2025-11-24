@@ -234,7 +234,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
 
   u8 ret = 0;
-  if(afl->has_saturated){
+  if(afl->has_saturated && afl->queue_cur->ancestor->should_have_count){ // saturateした、かつあんまり繁栄していない木だったら
     while (i--) {
 
       if (unlikely(*current)) discover_word(&ret, current, virgin);

@@ -691,6 +691,18 @@ void add_to_queue(afl_state_t *afl, u8 *fname, u32 len, u8 passed_det) {
   q->mother = afl->queue_cur;
   q->weight = 1.0;
   q->perf_score = 100;
+  if(afl->cur_depth == 0){ // 初期シードの場合
+    q->ancestor = q; // 自分自身を祖先にする
+    q->should_have_count = 1; // 最初に1に設定して、depthが5以上になるたびに0に戻していく
+  } else{
+    q->ancestor = afl->queue_cur->ancestor;
+  }
+
+  if(q->ancestor->should_have_count){
+    if(q->depth >= 5){ // ancestorを根とする木の全体のdepthが5以上になったら、この木の回数数えは一旦やめる
+      q->ancestor->should_have_count = 0;
+    }
+  }
 
 #ifdef INTROSPECTION
   q->bitsmap_size = afl->bitsmap_size;

@@ -242,6 +242,7 @@ struct queue_entry {
       stats_mutated;                    /* stats: # of mutations performed  */
 
   u32 tc_ref;                           /* Trace bytes ref count            */
+  u8 should_have_count;                 /* anceostorのみ: このnodeを根とする木はcountを数えるべきか否か */
 
 #ifdef INTROSPECTION
   u32 bitsmap_size;
@@ -251,6 +252,7 @@ struct queue_entry {
       weight;
 
   struct queue_entry *mother;            /* queue entry this based on        */
+  struct queue_entry *ancestor;          /* queue entry this derives from(初期シード) */
   u8                 *trace_mini;        /* Trace bytes, if kept             */
   u8                 *testcase_buf;      /* The testcase buffer, if loaded.  */
   u8                 *cmplog_colorinput; /* the result buf of colorization   */
