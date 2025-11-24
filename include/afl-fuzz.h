@@ -654,6 +654,9 @@ typedef struct afl_state {
       current_entry,                    /* Current queue entry ID           */
       havoc_div,                        /* Cycle count divisor for havoc    */
       max_det_extras;                   /* deterministic extra count (dicts)*/
+  
+  u32 big_tree_counts;
+  u32 total_tree_counts;
 
   u64 total_crashes,                    /* Total number of crashes          */
       saved_crashes,                    /* Crashes with unique signatures   */
@@ -883,6 +886,8 @@ typedef struct afl_state {
   s64 last_scored_idx;           /* Index of the last queue entry re-scored */
 
   u8 has_saturated;
+
+  u8 forest_expanded;
 
   u64 prev_total_edge_found_in_15_minutes;
 

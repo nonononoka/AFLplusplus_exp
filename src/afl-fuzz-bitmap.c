@@ -234,7 +234,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
 
   u8 ret = 0;
-  if(afl->has_saturated && afl->queue_cur->ancestor->should_have_count){ // saturateした、かつあんまり繁栄していない木だったら
+  if(afl->forest_expanded){
     while (i--) {
 
       if (unlikely(*current)) discover_word(&ret, current, virgin);
@@ -243,15 +243,28 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
       virgin++;
 
     }
-  }else{
-    while (i--) {
+  } else{
+      if(afl->has_saturated && afl->queue_cur->ancestor->should_have_count){ // saturateした、かつあんまり繁栄していない木だったら
+        // ACTF("rooted %u id not prosperous, depth: %u", afl->queue_cur->ancestor->id, afl->queue_cur->depth);
+        while (i--) {
 
-      if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
+          if (unlikely(*current)) discover_word(&ret, current, virgin);
 
-      current++;
-      virgin++;
+          current++;
+          virgin++;
 
-    }
+        }
+      } 
+      else{
+        while (i--) {
+
+          if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
+
+          current++;
+          virgin++;
+
+        }
+      }
   }
 
   if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))

@@ -624,6 +624,11 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
     }
   }
 
+  if(afl->has_saturated && !afl->forest_expanded){ // saturateしたけど、forestが全体で広がっていないとき
+    // seedの個数が鈍ってきたら
+    afl->forest_expanded = 1;
+  }
+
   for (u32 i = 0; i < afl->san_binary_length; i++) {
 
     fprintf(afl->fsrv.plot_file, ", %llu", afl->san_fsrvs[i].total_execs);
