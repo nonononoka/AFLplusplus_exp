@@ -348,6 +348,7 @@ u8 *describe_op(afl_state_t *afl, u8 new_bits, size_t max_description_len) {
   } else {
 
     sprintf(ret, "src:%06u", afl->current_entry);
+    sprintf(ret + strlen(ret), ",depth:%u", afl->cur_depth + 1);
 
     if (afl->splicing_with >= 0) {
 
@@ -751,7 +752,7 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
       close(fd);
 
     }
-
+    ACTF("queued seed: %s", queue_fn);
     add_to_queue(afl, queue_fn, len, 0);
 
     if (unlikely(afl->fuzz_mode) &&
