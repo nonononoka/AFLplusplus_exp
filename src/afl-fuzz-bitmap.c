@@ -740,7 +740,7 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
       close(fd);
 
     }
-
+    ACTF("queued seed: %s", queue_fn);
     add_to_queue(afl, queue_fn, len, 0);
 
     if (unlikely(afl->fuzz_mode) &&
