@@ -262,6 +262,8 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
         virgin++;
 
       }
+      if(ret == 0){ACTF("ret is zero");}
+      else{ACTF("ret is not zero: %u", ret);}
     }
   }
 
