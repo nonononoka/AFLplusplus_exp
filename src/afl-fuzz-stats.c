@@ -613,14 +613,22 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
           afl->plot_prev_ed, t_bytes, afl->total_crashes,
           (u32)afl->san_binary_length);                    /* ignore errors */
   
-  if (!afl->has_saturated){
+  if (!afl->saturation_level){
     if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*900){
       if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 0.01){
-        afl->has_saturated = 1;
+        afl->saturation_level = 1;
+        afl->last_updated_time = delta;
         ACTF("has saturated!");
       }
       afl->prev_total_edge_found_in_15_minutes = t_bytes;
       afl->last_updated_execs = afl->plot_prev_ed; // 今までの実行回数
+    }
+  }
+  else{
+    // とりあえず3時間ごとにsaturation_levelをあげていくかあ
+    if(delta - afl->last_updated_time >= 10800000){
+      afl->saturation_level++;
+      ACTF("current saturation level: %u", afl->saturation_level);
     }
   }
 
