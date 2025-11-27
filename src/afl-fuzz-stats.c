@@ -614,8 +614,8 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
           (u32)afl->san_binary_length);                    /* ignore errors */
   
   if (!afl->saturation_level){
-    if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*900){
-      if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 0.01){
+    if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*200){
+      if (((double)(t_bytes - afl->prev_total_edge_found_in_15_minutes) / (double)afl->prev_total_edge_found_in_15_minutes) <= 1000){
         afl->saturation_level = 1;
         afl->last_updated_time = delta;
         ACTF("has saturated!");
