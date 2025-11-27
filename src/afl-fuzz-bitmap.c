@@ -234,16 +234,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
 
   u8 ret = 0;
-  if(afl->has_saturated){
-    while (i--) {
-
-      if (unlikely(*current)) discover_word(&ret, current, virgin);
-
-      current++;
-      virgin++;
-
-    }
-  }else{
+  if(!afl->saturation_level){
     while (i--) {
 
       if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
@@ -251,6 +242,26 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
       current++;
       virgin++;
 
+    }
+  } else{
+    if(afl->saturation_level >= 2){ // めっちゃsaturateしたので、全部の回数変化を加える
+      while (i--) {
+
+        if (unlikely(*current)) discover_word(&ret, current, virgin);
+
+        current++;
+        virgin++;
+
+      }
+    }else if(afl->saturation_level == 1){ // edgeの数がsaturateした→31まで見る
+      while (i--) {
+
+        if (unlikely(*current)) discover_word_until_31_count(&ret, current, virgin);
+
+        current++;
+        virgin++;
+
+      }
     }
   }
 
@@ -348,7 +359,6 @@ u8 *describe_op(afl_state_t *afl, u8 new_bits, size_t max_description_len) {
   } else {
 
     sprintf(ret, "src:%06u", afl->current_entry);
-    sprintf(ret + strlen(ret), ",depth:%u", afl->cur_depth + 1);
 
     if (afl->splicing_with >= 0) {
 
@@ -690,7 +700,7 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
     // 飽和していない場合は、回数変化のみのシードは加えない
     calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
     
-    if ((afl->has_saturated && !new_bits) || (!afl->has_saturated && new_bits != 2)) {
+    if (!new_bits) {
 
       if (san_fault == FSRV_RUN_OK) {
 
@@ -751,8 +761,7 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
       ck_write(fd, mem, len, queue_fn);
       close(fd);
 
-    }
-    ACTF("queued seed: %s", queue_fn);
+    }    
     add_to_queue(afl, queue_fn, len, 0);
 
     if (unlikely(afl->fuzz_mode) &&
