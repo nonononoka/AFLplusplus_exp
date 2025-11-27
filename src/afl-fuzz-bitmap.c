@@ -256,7 +256,8 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
     }else if(afl->saturation_level == 1){ // edgeの数がsaturateした→31まで見る
       while (i--) {
 
-        if (unlikely(*current)) discover_word_until_31_count(&ret, current, virgin);
+        
+        if (unlikely(*current)) discover_word_until_15_count(&ret, current, virgin);
 
         current++;
         virgin++;
