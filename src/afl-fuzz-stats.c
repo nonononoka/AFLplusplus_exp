@@ -626,7 +626,7 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
   }
   else{
     // とりあえず3時間ごとにsaturation_levelをあげていくかあ
-    if(delta - afl->last_updated_time >= 10800000){
+    if(delta - afl->last_updated_time >= 14400000){
       afl->saturation_level++;
       afl->last_updated_time = delta;
       ACTF("current saturation level: %u", afl->saturation_level);
