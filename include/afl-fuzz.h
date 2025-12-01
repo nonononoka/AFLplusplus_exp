@@ -1229,6 +1229,8 @@ void simplify_trace(afl_state_t *, u8 *);
 void discover_word(u8 *ret, u64 *current, u64 *virgin);
 void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin);
 void discover_word_until_31_count(u8 *ret, u64 *current, u64 *virgin);
+void discover_word_only_new_edge_for_log(u8 *ret, u64 *current, u64 *virgin, int j);
+void discover_word_until_31_count_for_log(u8 *ret, u64 *current, u64 *virgin, int j);
 #else
 void discover_word(u8 *ret, u32 *current, u32 *virgin);
 #endif
@@ -1239,6 +1241,7 @@ u8 *describe_op(afl_state_t *, u8, size_t);
 #endif
 u8 save_if_interesting(afl_state_t *, void *, u32, u8);
 u8 has_new_bits(afl_state_t *, u8 *);
+u8 has_new_bits_for_log(afl_state_t *, u8 *);
 #ifndef AFL_SHOWMAP
 void classify_counts(afl_forkserver_t *);
 #endif
