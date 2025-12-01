@@ -127,42 +127,42 @@ inline void discover_word_until_31_count_for_log(u8 *ret, u64 *current, u64 *vir
       u8 *cur = (u8 *)current;
       u8 *vir = (u8 *)virgin;
 
-      if ((cur[0]&vir[0]) && cur[0] < 32) {
+      if ((cur[0]&vir[0]) && cur[0] < 64) {
         if(vir[0] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j, cur[0]);}
         else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j, cur[0]);}
         vir[0] &= ~cur[0];
       }
-      if ((cur[1]&vir[1]) && cur[1] < 32) {
+      if ((cur[1]&vir[1]) && cur[1] < 64) {
         if(vir[1] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+1, cur[1]);}
         else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+1, cur[1]);}
         vir[1] &= ~cur[1];
       }
-      if ((cur[2]&vir[2]) && cur[2] < 32) {
+      if ((cur[2]&vir[2]) && cur[2] < 64) {
         if(vir[2] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+2, cur[2]);}
         else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+2, cur[2]);}
         vir[2] &= ~cur[2];
       }
-      if ((cur[3]&vir[3]) && cur[3] < 32) {
+      if ((cur[3]&vir[3]) && cur[3] < 64) {
         if(vir[3] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+3, cur[3]);}
         else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+3, cur[3]);}
         vir[3] &= ~cur[3];
       }
-      if ((cur[4]&vir[4]) && cur[4] < 32) {
+      if ((cur[4]&vir[4]) && cur[4] < 64) {
         if(vir[4] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+4, cur[4]);}
         else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+4, cur[4]);}
         vir[4] &= ~cur[4];
       }
-      if ((cur[5]&vir[5]) && cur[5] < 32) {
+      if ((cur[5]&vir[5]) && cur[5] < 64) {
         if(vir[5] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+5, cur[5]);}
         else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+5, cur[5]);}
         vir[5] &= ~cur[5];
       }
-      if ((cur[6]&vir[6]) && cur[6] < 32) {
+      if ((cur[6]&vir[6]) && cur[6] < 64) {
         if(vir[6] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+6, cur[6]);}
         else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+6, cur[6]);}
         vir[6] &= ~cur[6];
       }
-      if ((cur[7]&vir[7]) && cur[7] < 32) {
+      if ((cur[7]&vir[7]) && cur[7] < 64) {
        if(vir[7] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+7, cur[7]);}
        else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+7, cur[7]);}
         vir[7] &= ~cur[7];
