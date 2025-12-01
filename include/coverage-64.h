@@ -194,42 +194,42 @@ inline void discover_word_until_31_count(u8 *ret, u64 *current, u64 *virgin) {
       u8 *cur = (u8 *)current;
       u8 *vir = (u8 *)virgin;
 
-      if ((cur[0]&vir[0]) && cur[0] < 8) {
+      if ((cur[0]&vir[0]) && cur[0] < 16) {
         if(vir[0] == 0xff){*ret = 2;}
         else if(*ret == 0){*ret = 1;}
         vir[0] &= ~cur[0];
       }
-      if ((cur[1]&vir[1]) && cur[1] < 8) {
+      if ((cur[1]&vir[1]) && cur[1] < 16) {
         if(vir[1] == 0xff){*ret = 2;}
         else if(*ret == 0){*ret = 1;}
         vir[1] &= ~cur[1];
       }
-      if ((cur[2]&vir[2]) && cur[2] < 8) {
+      if ((cur[2]&vir[2]) && cur[2] < 16) {
         if(vir[2] == 0xff){*ret = 2;}
         else if(*ret == 0){*ret = 1;}
         vir[2] &= ~cur[2];
       }
-      if ((cur[3]&vir[3]) && cur[3] < 8) {
+      if ((cur[3]&vir[3]) && cur[3] < 16) {
         if(vir[3] == 0xff){*ret = 2;}
         else if(*ret == 0){*ret = 1;}
         vir[3] &= ~cur[3];
       }
-      if ((cur[4]&vir[4]) && cur[4] < 8) {
+      if ((cur[4]&vir[4]) && cur[4] < 16) {
         if(vir[4] == 0xff){*ret = 2;}
         else if(*ret == 0){*ret = 1;}
         vir[4] &= ~cur[4];
       }
-      if ((cur[5]&vir[5]) && cur[5] < 8) {
+      if ((cur[5]&vir[5]) && cur[5] < 16) {
         if(vir[5] == 0xff){*ret = 2;}
         else if(*ret == 0){*ret = 1;}
         vir[5] &= ~cur[5];
       }
-      if ((cur[6]&vir[6]) && cur[6] < 8) {
+      if ((cur[6]&vir[6]) && cur[6] < 16) {
         if(vir[6] == 0xff){*ret = 2;}
         else if(*ret == 0){*ret = 1;}
         vir[6] &= ~cur[6];
       }
-      if ((cur[7]&vir[7]) && cur[7] < 8) {
+      if ((cur[7]&vir[7]) && cur[7] < 16) {
        if(vir[7] == 0xff){*ret = 2;}
        else if(*ret == 0){*ret = 1;}
         vir[7] &= ~cur[7];
