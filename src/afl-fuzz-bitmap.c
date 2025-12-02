@@ -237,7 +237,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
   if(afl->has_saturated){
     while (i--) {
 
-      if (unlikely(*current)) discover_word(&ret, current, virgin);
+      if (unlikely(*current)) discover_word_only_max(&ret, current, virgin);
 
       current++;
       virgin++;

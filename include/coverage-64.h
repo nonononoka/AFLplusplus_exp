@@ -170,6 +170,56 @@ inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
 
 }
 
+u8 fill_lower_bits(u8 x) {
+    if (x == 0) return 0;
+    x |= (x >> 1);
+    x |= (x >> 2);
+    x |= (x >> 4);
+    return x;
+}
+
+/* Updates the virgin bits, then reflects whether a new count or a new tuple is
+ * seen in ret. */
+inline void discover_word_only_max(u8 *ret, u64 *current, u64 *virgin) {
+
+  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
+     that have not been already cleared from the virgin map - since this will
+     almost always be the case. */
+
+  if (*current & *virgin) {
+
+    if (likely(*ret < 2)) {
+
+      u8 *cur = (u8 *)current;
+      u8 *vir = (u8 *)virgin;
+
+      /* Looks like we have not found any new bytes yet; see if any non-zero
+         bytes in current[] are pristine in virgin[]. */
+      cur[0] = fill_lower_bits(cur[0]);
+      cur[1] = fill_lower_bits(cur[1]);
+      cur[2] = fill_lower_bits(cur[2]);
+      cur[3] = fill_lower_bits(cur[3]);
+      cur[4] = fill_lower_bits(cur[4]);
+      cur[5] = fill_lower_bits(cur[5]);
+      cur[6] = fill_lower_bits(cur[6]);
+      cur[7] = fill_lower_bits(cur[7]);
+
+      if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
+          (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
+          (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
+          (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff))
+        *ret = 2;
+      else
+        *ret = 1;
+
+    }
+
+    *virgin &= ~*current;
+
+  }
+
+}
+
 #if defined(__AVX512F__) && defined(__AVX512DQ__)
   #define PACK_SIZE 64
 inline u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end) {
