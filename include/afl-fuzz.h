@@ -880,13 +880,6 @@ typedef struct afl_state {
 
   s64 last_scored_idx;           /* Index of the last queue entry re-scored */
 
-  u8 saturation_level;
-
-  u64 prev_total_edge_found_in_15_minutes;
-
-  u64 last_updated_execs;
-  u64 last_updated_time;
-
 #ifdef INTROSPECTION
   char  mutation[8072];
   char  m_tmp[4096];
@@ -1227,10 +1220,7 @@ u32  count_non_255_bytes(afl_state_t *, u8 *);
 void simplify_trace(afl_state_t *, u8 *);
 #ifdef WORD_SIZE_64
 void discover_word(u8 *ret, u64 *current, u64 *virgin);
-void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin);
-void discover_word_until_31_count(u8 *ret, u64 *current, u64 *virgin);
-void discover_word_only_new_edge_for_log(u8 *ret, u64 *current, u64 *virgin, int j);
-void discover_word_until_31_count_for_log(u8 *ret, u64 *current, u64 *virgin, int j);
+void discover_word_for_log(u8 *ret, u64 *current, u64 *virgin, int j);
 #else
 void discover_word(u8 *ret, u32 *current, u32 *virgin);
 #endif

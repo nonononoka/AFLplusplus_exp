@@ -234,35 +234,13 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
 
   u8 ret = 0;
-  if(!afl->saturation_level){
-    while (i--) {
+  while (i--) {
 
-      if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
+    if (unlikely(*current)) discover_word(&ret, current, virgin);
 
-      current++;
-      virgin++;
+    current++;
+    virgin++;
 
-    }
-  } else{
-    if(afl->saturation_level >= 2){ // めっちゃsaturateしたので、全部の回数変化を加える
-      while (i--) {
-
-        if (unlikely(*current)) discover_word(&ret, current, virgin);
-
-        current++;
-        virgin++;
-
-      }
-    }else if(afl->saturation_level == 1){ // edgeの数がsaturateした→31まで見る
-      while (i--) {
-
-        if (unlikely(*current)) discover_word_until_31_count(&ret, current, virgin);
-
-        current++;
-        virgin++;
-
-      }
-    }
   }
 
   if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
@@ -299,37 +277,14 @@ inline u8 has_new_bits_for_log(afl_state_t *afl, u8 *virgin_map) {
 
   u8 ret = 0;
   int j = 0;
-  if(!afl->saturation_level){
-    while (i--) {
+  while (i--) {
 
-      if (unlikely(*current)) discover_word_only_new_edge_for_log(&ret, current, virgin, j);
+    if (unlikely(*current)) discover_word_for_log(&ret, current, virgin, j);
 
-      current++;
-      virgin++;
-      j++;
+    current++;
+    virgin++;
+    j++;
 
-    }
-  } else{
-    if(afl->saturation_level >= 2){ // めっちゃsaturateしたので、全部の回数変化を加える
-      while (i--) {
-
-        if (unlikely(*current)) discover_word(&ret, current, virgin);
-
-        current++;
-        virgin++;
-
-      }
-    }else if(afl->saturation_level == 1){ // edgeの数がsaturateした→31まで見る
-      while (i--) {
-
-        if (unlikely(*current)) discover_word_until_31_count_for_log(&ret, current, virgin, j);
-
-        current++;
-        virgin++;
-        j++;
-
-      }
-    }
   }
 
   if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))

@@ -114,12 +114,12 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
 /* Updates the virgin bits, then reflects whether a new count or a new tuple is
  * seen in ret. */
 // 31までの回数までのところだけ回数変化として加える
-inline void discover_word_until_31_count_for_log(u8 *ret, u64 *current, u64 *virgin, int j) {
+inline void discover_word_for_log(u8 *ret, u64 *current, u64 *virgin, int j) {
 
   /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
      that have not been already cleared from the virgin map - since this will
      almost always be the case. */
-
+ 
   if (*current & *virgin) {
 
     // if (likely(*ret < 2)) {
@@ -129,235 +129,40 @@ inline void discover_word_until_31_count_for_log(u8 *ret, u64 *current, u64 *vir
 
       if ((cur[0]&vir[0])) {
         if(vir[0] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j, cur[0]);}
-        else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j, cur[0]);}
-        vir[0] &= ~cur[0];
+        else {ACTF("count differ: %u %u", 8*j, cur[0]);}
       }
       if ((cur[1]&vir[1])) {
         if(vir[1] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+1, cur[1]);}
-        else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+1, cur[1]);}
-        vir[1] &= ~cur[1];
+        else {ACTF("count differ: %u %u", 8*j+1, cur[1]);}
       }
       if ((cur[2]&vir[2])) {
         if(vir[2] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+2, cur[2]);}
-        else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+2, cur[2]);}
-        vir[2] &= ~cur[2];
+        else {ACTF("count differ: %u %u", 8*j+2, cur[2]);}
       }
       if ((cur[3]&vir[3])) {
         if(vir[3] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+3, cur[3]);}
-        else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+3, cur[3]);}
-        vir[3] &= ~cur[3];
+        else {ACTF("count differ: %u %u", 8*j+3, cur[3]);}
       }
       if ((cur[4]&vir[4])) {
         if(vir[4] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+4, cur[4]);}
-        else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+4, cur[4]);}
-        vir[4] &= ~cur[4];
+        else {ACTF("count differ: %u %u", 8*j+4, cur[4]);}
       }
       if ((cur[5]&vir[5])) {
         if(vir[5] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+5, cur[5]);}
-        else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+5, cur[5]);}
-        vir[5] &= ~cur[5];
+        else {ACTF("count differ: %u %u", 8*j+5, cur[5]);}
       }
       if ((cur[6]&vir[6])) {
         if(vir[6] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+6, cur[6]);}
-        else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+6, cur[6]);}
-        vir[6] &= ~cur[6];
+        else {ACTF("count differ: %u %u", 8*j+6, cur[6]);}
       }
       if ((cur[7]&vir[7])) {
        if(vir[7] == 0xff){*ret = 2; ACTF("new edge found: %u %u", 8*j+7, cur[7]);}
-       else if(*ret == 0){*ret = 1; ACTF("count differ: %u %u", 8*j+7, cur[7]);}
-        vir[7] &= ~cur[7];
+       else {ACTF("count differ: %u %u", 8*j+7, cur[7]);}
       }
 
     // }
-
-  }
-
-}
-
-/* Updates the virgin bits, then reflects whether a new count or a new tuple is
- * seen in ret. */
-// 31までの回数までのところだけ回数変化として加える
-inline void discover_word_until_31_count(u8 *ret, u64 *current, u64 *virgin) {
-
-  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
-     that have not been already cleared from the virgin map - since this will
-     almost always be the case. */
-
-  if (*current & *virgin) {
-
-    // if (likely(*ret < 2)) {
-
-      u8 *cur = (u8 *)current;
-      u8 *vir = (u8 *)virgin;
-
-      if ((cur[0]&vir[0]) && cur[0] < 8) {
-        if(vir[0] == 0xff){*ret = 2;}
-        else if(*ret == 0){*ret = 1;}
-        vir[0] &= ~cur[0];
-      }
-      if ((cur[1]&vir[1]) && cur[1] < 8) {
-        if(vir[1] == 0xff){*ret = 2;}
-        else if(*ret == 0){*ret = 1;}
-        vir[1] &= ~cur[1];
-      }
-      if ((cur[2]&vir[2]) && cur[2] < 8) {
-        if(vir[2] == 0xff){*ret = 2;}
-        else if(*ret == 0){*ret = 1;}
-        vir[2] &= ~cur[2];
-      }
-      if ((cur[3]&vir[3]) && cur[3] < 8) {
-        if(vir[3] == 0xff){*ret = 2;}
-        else if(*ret == 0){*ret = 1;}
-        vir[3] &= ~cur[3];
-      }
-      if ((cur[4]&vir[4]) && cur[4] < 8) {
-        if(vir[4] == 0xff){*ret = 2;}
-        else if(*ret == 0){*ret = 1;}
-        vir[4] &= ~cur[4];
-      }
-      if ((cur[5]&vir[5]) && cur[5] < 8) {
-        if(vir[5] == 0xff){*ret = 2;}
-        else if(*ret == 0){*ret = 1;}
-        vir[5] &= ~cur[5];
-      }
-      if ((cur[6]&vir[6]) && cur[6] < 8) {
-        if(vir[6] == 0xff){*ret = 2;}
-        else if(*ret == 0){*ret = 1;}
-        vir[6] &= ~cur[6];
-      }
-      if ((cur[7]&vir[7]) && cur[7] < 8) {
-       if(vir[7] == 0xff){*ret = 2;}
-       else if(*ret == 0){*ret = 1;}
-        vir[7] &= ~cur[7];
-      }
-
-    // }
-
-  }
-
-}
-
-/* Updates the virgin bits, then reflects whether a new count or a new tuple is
- * seen in ret. */
-// 新しいエッジがビットを立てたところだけ、ビットを更新したい
-// 新規エッジが立ったところだけビットを埋める
-// この場合返すのは、0か2のみ
-inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
-
-  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
-     that have not been already cleared from the virgin map - since this will
-     almost always be the case. */
-
-  if (*current & *virgin) {
-
-    // if (likely(*ret < 2)) {
-
-      u8 *cur = (u8 *)current;
-      u8 *vir = (u8 *)virgin;
-
-      /* Looks like we have not found any new bytes yet; see if any non-zero
-         bytes in current[] are pristine in virgin[]. */
-      if (cur[0] && vir[0] == 0xff) {
-        *ret = 2;
-        vir[0] &= ~cur[0];
-      }
-      if (cur[1] && vir[1] == 0xff) {
-        *ret = 2;
-        vir[1] &= ~cur[1];
-      }
-      if (cur[2] && vir[2] == 0xff) {
-        *ret = 2;
-        vir[2] &= ~cur[2];
-      }
-      if (cur[3] && vir[3] == 0xff) {
-        *ret = 2;
-        vir[3] &= ~cur[3];
-      }
-      if (cur[4] && vir[4] == 0xff) {
-        *ret = 2;
-        vir[4] &= ~cur[4];
-      }
-      if (cur[5] && vir[5] == 0xff) {
-        *ret = 2;
-        vir[5] &= ~cur[5];
-      }
-      if (cur[6] && vir[6] == 0xff) {
-        *ret = 2;
-        vir[6] &= ~cur[6];
-      }
-      if (cur[7] && vir[7] == 0xff) {
-        *ret = 2;
-        vir[7] &= ~cur[7];
-      }
-
-    // }
-
-  }
-
-}
-
-/* Updates the virgin bits, then reflects whether a new count or a new tuple is
- * seen in ret. */
-// 新しいエッジがビットを立てたところだけ、ビットを更新したい
-// 新規エッジが立ったところだけビットを埋める
-// この場合返すのは、0か2のみ
-inline void discover_word_only_new_edge_for_log(u8 *ret, u64 *current, u64 *virgin, int j) {
-
-  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
-     that have not been already cleared from the virgin map - since this will
-     almost always be the case. */
-
-  if (*current & *virgin) {
-
-    // if (likely(*ret < 2)) {
-
-      u8 *cur = (u8 *)current;
-      u8 *vir = (u8 *)virgin;
-
-      /* Looks like we have not found any new bytes yet; see if any non-zero
-         bytes in current[] are pristine in virgin[]. */
-      if (cur[0] && vir[0] == 0xff) {
-        *ret = 2;
-        vir[0] &= ~cur[0];
-        ACTF("new edge found: %u %u", 8*j, cur[0]);
-      }
-      if (cur[1] && vir[1] == 0xff) {
-        *ret = 2;
-        vir[1] &= ~cur[1];
-        ACTF("new edge found: %u %u", 8*j+1, cur[1]);
-      }
-      if (cur[2] && vir[2] == 0xff) {
-        *ret = 2;
-        vir[2] &= ~cur[2];
-        ACTF("new edge found: %u %u", 8*j+2, cur[2]);
-      }
-      if (cur[3] && vir[3] == 0xff) {
-        *ret = 2;
-        vir[3] &= ~cur[3];
-        ACTF("new edge found: %u %u", 8*j+3, cur[3]);
-      }
-      if (cur[4] && vir[4] == 0xff) {
-        *ret = 2;
-        vir[4] &= ~cur[4];
-        ACTF("new edge found: %u %u", 8*j+4, cur[4]);
-      }
-      if (cur[5] && vir[5] == 0xff) {
-        *ret = 2;
-        vir[5] &= ~cur[5];
-        ACTF("new edge found: %u %u", 8*j+5, cur[5]);
-      }
-      if (cur[6] && vir[6] == 0xff) {
-        *ret = 2;
-        vir[6] &= ~cur[6];
-        ACTF("new edge found: %u %u", 8*j+6, cur[6]);
-      }
-      if (cur[7] && vir[7] == 0xff) {
-        *ret = 2;
-        vir[7] &= ~cur[7];
-        ACTF("new edge found: %u %u", 8*j+7, cur[7]);
-      }
-
-    // }
+    *virgin &= ~*current;
+    if(*ret < 2){*ret = 1;}
 
   }
 
