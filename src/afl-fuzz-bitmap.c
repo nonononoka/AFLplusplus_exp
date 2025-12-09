@@ -257,7 +257,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
 
       }
 
-      if(ret < 2 && count_difference_bytes >= 6){ret = 1;} // 回数変化3つ以上のやつだけ追加
+      if(ret < 2 && count_difference_bytes >= 8){ret = 1;} // 回数変化3つ以上のやつだけ追加
     }
   }else{
     while (i--) {
