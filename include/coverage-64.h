@@ -170,6 +170,65 @@ inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
 
 }
 
+/* Updates the virgin bits, then reflects whether a new count or a new tuple is
+ * seen in ret. */
+// 新しいエッジがビットを立てたところだけ、ビットを更新したい
+// 新規エッジが立ったところだけビットを埋める
+// この場合返すのは、0か2のみ
+inline void detect_if_enqueue(u8 *ret, u64 *current, u64 *virgin, u8 *count_difference_bytes) {
+
+  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
+     that have not been already cleared from the virgin map - since this will
+     almost always be the case. */
+
+  if (*current & *virgin) {
+
+    if (likely(*ret < 2)) {
+
+      u8 *cur = (u8 *)current;
+      u8 *vir = (u8 *)virgin;
+
+      /* Looks like we have not found any new bytes yet; see if any non-zero
+         bytes in current[] are pristine in virgin[]. */
+      if (cur[0] & vir[0]) {
+        if(vir[0] == 0xff){*ret = 2;}
+        else{(*count_difference_bytes)++;}
+      }
+      if (cur[1] & vir[1]) {
+        if(vir[1] == 0xff){*ret = 2;}
+        else{(*count_difference_bytes)++;}
+      }
+      if (cur[2] & vir[2]) {
+        if(vir[2] == 0xff){*ret = 2;}
+        else{(*count_difference_bytes)++;}
+      }
+      if (cur[3] & vir[3]) {
+        if(vir[3] == 0xff){*ret = 2;}
+        else{(*count_difference_bytes)++;}
+      }
+      if (cur[4] & vir[4]) {
+        if(vir[4] == 0xff){*ret = 2;}
+        else{(*count_difference_bytes)++;}
+      }
+      if (cur[5] & vir[5] ) {
+        if(vir[5] == 0xff){*ret = 2;}
+        else{(*count_difference_bytes)++;}
+      }
+      if (cur[6] & vir[6] ) {
+        if(vir[6] == 0xff){*ret = 2;}
+        else{(*count_difference_bytes)++;}
+      }
+      if (cur[7] & vir[7] ) {
+        if(vir[7] == 0xff){*ret = 2;}
+        else{(*count_difference_bytes)++;}
+      }
+
+    }
+
+  }
+
+}
+
 #if defined(__AVX512F__) && defined(__AVX512DQ__)
   #define PACK_SIZE 64
 inline u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end) {

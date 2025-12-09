@@ -216,7 +216,7 @@ void init_count_class16(void) {
    This function is called after every exec() on a fairly large buffer, so
    it needs to be fast. We do this in 32-bit and 64-bit flavors. */
 
-inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
+inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
 #ifdef WORD_SIZE_64
 
   u64 *current = (u64 *)afl->fsrv.trace_bits;
@@ -234,14 +234,30 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
 
   u8 ret = 0;
-  if(afl->has_saturated){
-    while (i--) {
 
-      if (unlikely(*current)) discover_word(&ret, current, virgin);
+  if(afl->has_saturated){ // saturateしたあとは、回数変化をでかい方からやる
+    if(should_update_map){ // こっちは、calibrate caseとかから呼ばれるやつ
+      while (i--) {
 
-      current++;
-      virgin++;
+        if (unlikely(*current)) discover_word(&ret, current, virgin);
 
+        current++;
+        virgin++;
+
+      }
+    } else{
+      u8 count_difference_bytes = 0;
+
+      while (i--) {
+
+        if (unlikely(*current)) detect_if_enqueue(&ret, current, virgin, &count_difference_bytes); // ここで回数を数える
+
+          current++;
+          virgin++;
+
+      }
+
+      if(ret < 2 && count_difference_bytes >= 3){ret = 1;} // 回数変化3つ以上のやつだけ追加
     }
   }else{
     while (i--) {
@@ -255,7 +271,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
   }
 
   if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
-    afl->bitmap_changed = 1;
+    afl->bitmap_changed = 1; // ここのフラグは雑になっちゃうけど、fileに書き込んでいるだけだからまあとりあえず良い
 
   return ret;
 
@@ -290,7 +306,7 @@ static inline u8 has_new_bits_unclassified(afl_state_t *afl, u8 *virgin_map,
 #endif                                                     /* ^WORD_SIZE_64 */
   classify_counts(&afl->fsrv);
   *classified = true;
-  return has_new_bits(afl, virgin_map);
+  return has_new_bits(afl, virgin_map, 0);
 
 }
 
@@ -522,7 +538,7 @@ static inline void calculate_new_bits_if_necessary(afl_state_t *afl,
 
   if (*classified) {
 
-    *new_bits = has_new_bits(afl, afl->virgin_bits);
+    *new_bits = has_new_bits(afl, afl->virgin_bits, 0);
 
   } else {
 
@@ -689,7 +705,7 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
     // 飽和していない場合は、回数変化のみのシードは加えない
     calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
     
-    if ((afl->has_saturated && !new_bits) || (!afl->has_saturated && new_bits != 2)) {
+    if (likely(!new_bits)) { // new_bitsは、saturate前は、0 or 2で、saturate後は0 or 1 or 2になってるから、これで良い
 
       if (san_fault == FSRV_RUN_OK) {
 
@@ -851,7 +867,7 @@ may_save_fault:
 
         simplify_trace(afl, afl->fsrv.trace_bits);
 
-        if (!has_new_bits(afl, afl->virgin_tmout)) { return keeping; }
+        if (!has_new_bits(afl, afl->virgin_tmout, 1)) { return keeping; }
 
       }
 
@@ -986,7 +1002,7 @@ may_save_fault:
 
         simplify_trace(afl, afl->fsrv.trace_bits);
 
-        if (!has_new_bits(afl, afl->virgin_crash)) { return keeping; }
+        if (!has_new_bits(afl, afl->virgin_crash, 1)) { return keeping; }
 
       }
 
