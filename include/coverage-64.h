@@ -113,69 +113,8 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
 
 /* Updates the virgin bits, then reflects whether a new count or a new tuple is
  * seen in ret. */
-// 新しいエッジがビットを立てたところだけ、ビットを更新したい
-// 新規エッジが立ったところだけビットを埋める
-// この場合返すのは、0か2のみ
-inline void discover_word_only_new_edge(u8 *ret, u64 *current, u64 *virgin) {
-
-  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
-     that have not been already cleared from the virgin map - since this will
-     almost always be the case. */
-
-  if (*current & *virgin) {
-
-    // if (likely(*ret < 2)) {
-
-      u8 *cur = (u8 *)current;
-      u8 *vir = (u8 *)virgin;
-
-      /* Looks like we have not found any new bytes yet; see if any non-zero
-         bytes in current[] are pristine in virgin[]. */
-      if (cur[0] && vir[0] == 0xff) {
-        *ret = 2;
-        vir[0] &= ~cur[0];
-      }
-      if (cur[1] && vir[1] == 0xff) {
-        *ret = 2;
-        vir[1] &= ~cur[1];
-      }
-      if (cur[2] && vir[2] == 0xff) {
-        *ret = 2;
-        vir[2] &= ~cur[2];
-      }
-      if (cur[3] && vir[3] == 0xff) {
-        *ret = 2;
-        vir[3] &= ~cur[3];
-      }
-      if (cur[4] && vir[4] == 0xff) {
-        *ret = 2;
-        vir[4] &= ~cur[4];
-      }
-      if (cur[5] && vir[5] == 0xff) {
-        *ret = 2;
-        vir[5] &= ~cur[5];
-      }
-      if (cur[6] && vir[6] == 0xff) {
-        *ret = 2;
-        vir[6] &= ~cur[6];
-      }
-      if (cur[7] && vir[7] == 0xff) {
-        *ret = 2;
-        vir[7] &= ~cur[7];
-      }
-
-    // }
-
-  }
-
-}
-
-/* Updates the virgin bits, then reflects whether a new count or a new tuple is
- * seen in ret. */
-// 新しいエッジがビットを立てたところだけ、ビットを更新したい
-// 新規エッジが立ったところだけビットを埋める
-// この場合返すのは、0か2のみ
-inline void detect_if_enqueue(u8 *ret, u64 *current, u64 *virgin, u8 *count_difference_bytes) {
+// saturateしたら，回数変化のエッジの数が多いやつの方から
+inline void detect_if_enqueue_after_saturation(u8 *ret, u64 *current, u64 *virgin, u8 *count_difference_bytes) {
 
   /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
      that have not been already cleared from the virgin map - since this will
@@ -221,6 +160,34 @@ inline void detect_if_enqueue(u8 *ret, u64 *current, u64 *virgin, u8 *count_diff
       if (cur[7] & vir[7] ) {
         if(vir[7] == 0xff){*ret = 2;}
         else{(*count_difference_bytes)++;}
+      }
+
+    }
+
+  }
+
+}
+
+/* Updates the virgin bits, then reflects whether a new count or a new tuple is
+ * seen in ret. */
+// saturateする前だと
+inline void detect_if_enqueue_before_saturation(u8 *ret, u64 *current, u64 *virgin) {
+
+  if (*current & *virgin) {
+
+    if (likely(*ret < 2)) {
+
+      u8 *cur = (u8 *)current;
+      u8 *vir = (u8 *)virgin;
+
+      /* Looks like we have not found any new bytes yet; see if any non-zero
+         bytes in current[] are pristine in virgin[]. */
+
+      if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
+          (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
+          (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
+          (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff)){
+        *ret = 2;
       }
 
     }

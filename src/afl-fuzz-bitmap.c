@@ -235,38 +235,38 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
 
   u8 ret = 0;
 
-  if(afl->has_saturated){ // saturateしたあとは、回数変化をでかい方からやる
-    if(should_update_map){ // こっちは、calibrate caseとかから呼ばれるやつ
-      while (i--) {
-
-        if (unlikely(*current)) discover_word(&ret, current, virgin);
-
-        current++;
-        virgin++;
-
-      }
-    } else{
-      u8 count_difference_bytes = 0;
-
-      while (i--) {
-
-        if (unlikely(*current)) detect_if_enqueue(&ret, current, virgin, &count_difference_bytes); // ここで回数を数える
-
-          current++;
-          virgin++;
-
-      }
-
-      if(ret < 2 && count_difference_bytes >= 10){ret = 1;} // 回数変化3つ以上のやつだけ追加
-    }
-  }else{
+  if(should_update_map){ // こっちは、calibrate caseとかから呼ばれるやつ
     while (i--) {
 
-      if (unlikely(*current)) discover_word_only_new_edge(&ret, current, virgin);
+      if (unlikely(*current)) {discover_word(&ret, current, virgin);}
 
       current++;
       virgin++;
 
+    }
+  } else{
+    if(afl->has_saturated){
+      u8 count_difference_bytes = 0;
+
+      while (i--) {
+
+        if (unlikely(*current)) {detect_if_enqueue_after_saturation(&ret, current, virgin, &count_difference_bytes);} // ここで回数を数える
+        
+        current++;
+        virgin++;
+
+      }
+
+      if(ret < 2 && count_difference_bytes >= 5){ret = 1;} // 回数変化3つ以上のやつだけ追加
+    } else{
+      while (i--) {
+
+        if (unlikely(*current)) {detect_if_enqueue_before_saturation(&ret, current, virgin); }// ここで回数を数える
+        
+        current++;
+        virgin++;
+
+      }
     }
   }
 
