@@ -776,7 +776,7 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
     // 飽和していない場合は、回数変化のみのシードは加えない
     calculate_new_bits_if_necessary_for_log(afl, &new_bits, &bits_counted, &classified);
     
-    if (!new_bits) {
+    if (new_bits != 2) {
 
       if (san_fault == FSRV_RUN_OK) {
 
