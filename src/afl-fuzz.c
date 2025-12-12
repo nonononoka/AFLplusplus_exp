@@ -3056,7 +3056,19 @@ int main(int argc, char **argv_orig, char **envp) {
       if (afl->afl_env.afl_no_ui) {
 
         ACTF("Entering queue cycle %llu\n", afl->queue_cycle);
-
+        if(afl->queue_cycle > 1 && afl->queue_cycle % 5 == 1){
+          if (unlikely(afl->queue_cycle == 6)){
+            afl->has_saturated = 1;
+            afl->saturation_level = 5;
+            ACTF("has saturated!");
+          }
+          else{
+            if(afl->saturation_level >= 1){
+              afl->saturation_level--;
+              ACTF("current saturation level: %u", afl->saturation_level);
+            }
+          }
+        }
       }
 
       runs_in_current_cycle = (u32)-1;
