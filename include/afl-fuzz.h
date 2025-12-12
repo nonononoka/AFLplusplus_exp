@@ -1228,6 +1228,8 @@ void simplify_trace(afl_state_t *, u8 *);
 #ifdef WORD_SIZE_64
 void discover_word(u8 *ret, u64 *current, u64 *virgin);
 void detect_if_enqueue_before_saturation(u8 *ret, u64 *current, u64 *virgin);
+void detect_if_enqueue_before_saturation_log(u8 *ret, u64 *current, u64 *virgin, int j);
+void detect_if_enqueue_after_saturation_log(u8 *ret, u64 *current, u64 *virgin, u8* count_difference_bytes, int j);
 void detect_if_enqueue_after_saturation(u8 *ret, u64 *current, u64 *virgin, u8* count_difference_bytes);
 #else
 void discover_word(u8 *ret, u32 *current, u32 *virgin);

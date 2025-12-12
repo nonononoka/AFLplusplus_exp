@@ -247,25 +247,47 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
   } else{
     if(afl->has_saturated){
       u8 count_difference_bytes = 0;
-
       while (i--) {
 
         if (unlikely(*current)) {detect_if_enqueue_after_saturation(&ret, current, virgin, &count_difference_bytes);} // ここで回数を数える
-        
         current++;
         virgin++;
 
       }
 
-      if(ret < 2 && count_difference_bytes >= afl->saturation_level){ret = 1;} // 回数変化3つ以上のやつだけ追加
+      if(ret == 2 || count_difference_bytes >= afl->saturation_level){
+        if(ret < 2){ret = 1;}
+        int j = 0;
+        u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
+        while (i--) {
+
+          if (unlikely(*current)) {detect_if_enqueue_after_saturation_log(&ret, current, virgin, &count_difference_bytes, j);} // ここで回数を数える
+          j++;
+          current++;
+          virgin++;
+
+        }
+      } // 回数変化3つ以上のやつだけ追加
     } else{
       while (i--) {
-
-        if (unlikely(*current)) {detect_if_enqueue_before_saturation(&ret, current, virgin); }// ここで回数を数える
         
+        if (unlikely(*current)) {detect_if_enqueue_before_saturation(&ret, current, virgin); }// ここで回数を数える
         current++;
         virgin++;
 
+      }
+
+      if(ret == 2){
+        int j = 0;
+        u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
+        while (i--) {
+
+          if (unlikely(*current)) {detect_if_enqueue_before_saturation_log(&ret, current, virgin, j);} // ここで回数を数える
+          j++;
+          current++;
+          virgin++;
+
+        }
       }
     }
   }
@@ -768,6 +790,7 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
 
     }
 
+    ACTF("queued seed: %s", queue_fn);
     add_to_queue(afl, queue_fn, len, 0);
 
     if (unlikely(afl->fuzz_mode) &&

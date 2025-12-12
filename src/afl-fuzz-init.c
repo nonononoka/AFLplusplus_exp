@@ -1499,6 +1499,22 @@ void perform_dry_run(afl_state_t *afl) {
   }
 
   OKF("All test cases processed.");
+  u64 *virgin = (u64 *)afl->virgin_bits;
+  u32 map_index = ((afl->fsrv.real_map_size + 7) >> 3);
+  u32 k = 0;
+  while (map_index--) {
+    u8 *vir = (u8 *)virgin;
+    ACTF("bitmap: %u %u", 8*k, vir[0]);
+    ACTF("bitmap: %u %u", 8*k+1, vir[1]);
+    ACTF("bitmap: %u %u", 8*k+2, vir[2]);
+    ACTF("bitmap: %u %u", 8*k+3, vir[3]);
+    ACTF("bitmap: %u %u", 8*k+4, vir[4]);
+    ACTF("bitmap: %u %u", 8*k+5, vir[5]);
+    ACTF("bitmap: %u %u", 8*k+6, vir[6]);
+    ACTF("bitmap: %u %u", 8*k+7, vir[7]);
+    virgin++;
+    k+=1;
+  }
 
 }
 
