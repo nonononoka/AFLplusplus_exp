@@ -3059,15 +3059,15 @@ int main(int argc, char **argv_orig, char **envp) {
         if(afl->queue_cycle > 1 && afl->queue_cycle % 5 == 1){
           if (unlikely(afl->queue_cycle == 6)){
             afl->has_saturated = 1;
-            afl->saturation_level = 1;
+            afl->saturation_level = 5;
             ACTF("has saturated!");
           }
-          // else{
-          //   if(afl->saturation_level >= 1){
-          //     afl->saturation_level--;
-          //     ACTF("current saturation level: %u", afl->saturation_level);
-          //   }
-          // }
+          else{
+            if(afl->saturation_level >= 1){
+              afl->saturation_level--;
+              ACTF("current saturation level: %u", afl->saturation_level);
+            }
+          }
         }
       }
 

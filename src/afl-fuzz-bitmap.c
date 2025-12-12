@@ -259,6 +259,8 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
         if(ret < 2){ret = 1;}
         int j = 0;
         u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
+        u64 *current = (u64 *)afl->fsrv.trace_bits;
+        u64 *virgin = (u64 *)virgin_map;
         while (i--) {
 
           if (unlikely(*current)) {detect_if_enqueue_after_saturation_log(&ret, current, virgin, &count_difference_bytes, j);} // ここで回数を数える
@@ -280,6 +282,8 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
       if(ret == 2){
         int j = 0;
         u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
+        u64 *current = (u64 *)afl->fsrv.trace_bits;
+        u64 *virgin = (u64 *)virgin_map;
         while (i--) {
 
           if (unlikely(*current)) {detect_if_enqueue_before_saturation_log(&ret, current, virgin, j);} // ここで回数を数える
