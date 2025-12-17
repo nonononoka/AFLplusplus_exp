@@ -880,9 +880,9 @@ typedef struct afl_state {
 
   s64 last_scored_idx;           /* Index of the last queue entry re-scored */
 
-  u8 has_saturated;
+  u8 saturation_level;
 
-  u64 prev_total_edge_found_in_15_minutes;
+  u32 prev_total_queued_items_in_10_minutes;
 
   u64 last_updated_execs;
 
