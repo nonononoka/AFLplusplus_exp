@@ -616,23 +616,24 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
   if(!afl->has_saturated){ // さちる前
     if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*600){
       if (((double)(afl->queued_items - afl->prev_total_queued_items_in_10_minutes) / (double)afl->prev_total_queued_items_in_10_minutes) <= 0.01){
-        afl->saturation_level = 1;
+        afl->saturation_level = 3;
         afl->has_saturated = 1;
         ACTF("current saturation level: %u", afl->saturation_level); // 3以上のやつだけ突っ込む
       }
       afl->prev_total_queued_items_in_10_minutes = afl->queued_items;
       afl->last_updated_execs = afl->plot_prev_ed; // 今までの実行回数
     }
-  } else if (afl->saturation_level != 1){
-    if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*600){
-      if (((double)(afl->queued_items - afl->prev_total_queued_items_in_10_minutes) / (double)afl->prev_total_queued_items_in_10_minutes) <= 0.01){
-        afl->saturation_level = 1;
-        ACTF("current saturation level: %u", afl->saturation_level);
-      }
-      afl->prev_total_queued_items_in_10_minutes = afl->queued_items;
-      afl->last_updated_execs = afl->plot_prev_ed; // 今までの実行回数
-    }
-  }
+  } 
+  // else if (afl->saturation_level != 1){
+  //   if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*600){
+  //     if (((double)(afl->queued_items - afl->prev_total_queued_items_in_10_minutes) / (double)afl->prev_total_queued_items_in_10_minutes) <= 0.01){
+  //       afl->saturation_level = 1;
+  //       ACTF("current saturation level: %u", afl->saturation_level);
+  //     }
+  //     afl->prev_total_queued_items_in_10_minutes = afl->queued_items;
+  //     afl->last_updated_execs = afl->plot_prev_ed; // 今までの実行回数
+  //   }
+  // }
 
   for (u32 i = 0; i < afl->san_binary_length; i++) {
 
