@@ -883,7 +883,7 @@ typedef struct afl_state {
   u8 has_saturated;
   u8 saturation_level;
 
-  u64 prev_total_edge_found_in_15_minutes;
+  u32 prev_total_queued_items_in_10_minutes;
 
   u64 last_updated_execs;
 
