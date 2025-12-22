@@ -255,6 +255,10 @@ void create_alias_table(afl_state_t *afl) {
 
           }
 
+          if(q->cat == 3){
+            weight *= 10;
+          }
+
           if (unlikely(!q->was_fuzzed)) { weight *= 2.5; }
           if (unlikely(q->fs_redundant)) { weight *= 0.75; }
 

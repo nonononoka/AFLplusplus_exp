@@ -241,6 +241,7 @@ struct queue_entry {
       custom,                           /* Marker for custom mutators       */
       stats_mutated;                    /* stats: # of mutations performed  */
 
+  u8 cat;
   u32 tc_ref;                           /* Trace bytes ref count            */
 
 #ifdef INTROSPECTION

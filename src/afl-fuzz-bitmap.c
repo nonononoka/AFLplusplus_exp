@@ -846,6 +846,8 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
       afl->queue_top->has_new_cov = 1;
       ++afl->queued_with_cov;
 
+    } else if(new_bits == 1){
+      afl->queue_top->cat = 3;
     }
 
     /* For AFLFast schedules we update the new queue entry */

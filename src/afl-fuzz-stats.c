@@ -619,7 +619,7 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
         afl->saturation_level = 5;
         afl->has_saturated = 1;
         ACTF("current saturation level: %u", afl->saturation_level); // 3以上のやつだけ突っ込む
-        memset(afl->top_rated, 0, afl->fsrv.map_size * sizeof(void *)); // top ratedを
+        // memset(afl->top_rated, 0, afl->fsrv.map_size * sizeof(void *)); // top ratedを
       }
 
       afl->prev_total_queued_items_in_10_minutes = afl->queued_items;
