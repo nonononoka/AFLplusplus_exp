@@ -175,7 +175,7 @@ inline void detect_if_enqueue_before_saturation(u8 *ret, u64 *current, u64 *virg
 
   if (*current & *virgin) {
 
-    if (likely(*ret < 2)) {
+    // if (likely(*ret < 2)) {
 
       u8 *cur = (u8 *)current;
       u8 *vir = (u8 *)virgin;
@@ -224,7 +224,7 @@ inline void detect_if_enqueue_before_saturation(u8 *ret, u64 *current, u64 *virg
       }
 
 
-    }
+    // }
 
   }
 
