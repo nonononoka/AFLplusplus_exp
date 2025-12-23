@@ -268,7 +268,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
 
       }
 
-      if(found_edge_bytes < 3){ ret = 0;} // 発見したedgeの数3未満はretを0に戻す
+      // if(found_edge_bytes < 3){ ret = 0;} // 発見したedgeの数3未満はretを0に戻す
     } else{ // 大体全部見終わったら
       while (i--) {
 
