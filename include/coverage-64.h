@@ -171,7 +171,7 @@ inline void detect_if_enqueue_after_saturation(u8 *ret, u64 *current, u64 *virgi
 /* Updates the virgin bits, then reflects whether a new count or a new tuple is
  * seen in ret. */
 // saturateする前だと
-inline void detect_if_enqueue_before_saturation(u8 *ret, u64 *current, u64 *virgin) {
+inline void detect_if_enqueue_before_saturation(u8 *ret, u64 *current, u64 *virgin, u8 *found_edge_bytes) {
 
   if (*current & *virgin) {
 
@@ -183,12 +183,46 @@ inline void detect_if_enqueue_before_saturation(u8 *ret, u64 *current, u64 *virg
       /* Looks like we have not found any new bytes yet; see if any non-zero
          bytes in current[] are pristine in virgin[]. */
 
-      if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
-          (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
-          (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
-          (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff)){
-        *ret = 2;
+      if (cur[0] && vir[0] == 0xff) {
+          *ret = 2;
+          (*found_edge_bytes)++;
       }
+
+      if (cur[1] && vir[1] == 0xff) {
+          *ret = 2;
+          (*found_edge_bytes)++;
+      }
+
+      if (cur[2] && vir[2] == 0xff) {
+          *ret = 2;
+          (*found_edge_bytes)++;
+      }
+
+      if (cur[3] && vir[3] == 0xff) {
+          *ret = 2;
+          (*found_edge_bytes)++;
+      }
+
+      if (cur[4] && vir[4] == 0xff) {
+          *ret = 2;
+          (*found_edge_bytes)++;
+      }
+
+      if (cur[5] && vir[5] == 0xff) {
+          *ret = 2;
+          (*found_edge_bytes)++;
+      }
+
+      if (cur[6] && vir[6] == 0xff) {
+          *ret = 2;
+          (*found_edge_bytes)++;
+      }
+
+      if (cur[7] && vir[7] == 0xff) {
+          *ret = 2;
+          (*found_edge_bytes)++;
+      }
+
 
     }
 

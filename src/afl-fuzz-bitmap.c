@@ -259,14 +259,16 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
 
       if(ret < 2 && count_difference_bytes >= 1){ret = 1;} // 回数変化3つ以上のやつだけ追加
     } else if(afl->saturation_level == 0){ // 初期のグーンって伸びるフェーズ
+      u8 found_edge_bytes = 0;
       while (i--) {
-
-        if (unlikely(*current)) {detect_if_enqueue_before_saturation(&ret, current, virgin); }// ここで回数を数える
+        if (unlikely(*current)) {detect_if_enqueue_before_saturation(&ret, current, virgin, &found_edge_bytes); }// ここで回数を数える
         
         current++;
         virgin++;
 
       }
+
+      if(found_edge_bytes < 3){ ret = 0;} // 発見したedgeの数3未満はretを0に戻す
     } else{ // 大体全部見終わったら
       while (i--) {
 
