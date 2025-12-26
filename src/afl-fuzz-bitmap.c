@@ -246,18 +246,18 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
     }
   } else{
     if(afl->saturation_level == 1){ // 大体edgeがさちったらこれ
-      u8 count_difference_bytes = 0;
+      u8 max_count_difference_bytes = 0;
 
       while (i--) {
 
-        if (unlikely(*current)) {detect_if_enqueue_after_saturation(&ret, current, virgin, &count_difference_bytes);} // ここで回数を数える
+        if (unlikely(*current)) {detect_if_enqueue_after_saturation(&ret, current, virgin, &max_count_difference_bytes);} // ここで回数を数える
         
         current++;
         virgin++;
 
       }
 
-      if(ret < 2 && count_difference_bytes >= 2){ret = 1;} // 回数変化3つ以上のやつだけ追加
+      if(ret < 2 && max_count_difference_bytes < 32){ret = 1;} // 最大の回数変化が32のやつだけ追加
     } else if(afl->saturation_level == 0){ // 初期のグーンって伸びるフェーズ
       while (i--) {
 
