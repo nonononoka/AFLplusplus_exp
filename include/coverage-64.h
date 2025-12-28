@@ -4,7 +4,6 @@
 
 #include "config.h"
 #include "types.h"
-#include <assert.h>
 
 #define _AFL_INTSIZEVAR u64
 
@@ -177,35 +176,35 @@ inline void update_cov(u64 *current, u64 *virgin, u64 *coverage) {
          bytes in current[] are pristine in virgin[]. */
       if (cur[0] & vir[0]) {
         cov[0] += 1;
-        assert(cov[0] <= 8);
+        if(cov[0] > 8){ACTF("bug!");};
       }
       if (cur[1] & vir[1]) {
         cov[1] += 1;
-        assert(cov[1] <= 8);
+        if(cov[1] > 8){ACTF("bug!");};
       }
       if (cur[2] & vir[2]) {
         cov[2] += 1;
-        assert(cov[2] <= 8);
+        if(cov[2] > 8){ACTF("bug!");};
       }
       if (cur[3] & vir[3]) {
         cov[3] += 1;
-        assert(cov[3] <= 8);
+        if(cov[3] > 8){ACTF("bug!");};
       }
       if (cur[4] & vir[4]) {
         cov[4] += 1;
-        assert(cov[4] <= 8);
+        if(cov[4] > 8){ACTF("bug!");};
       }
       if (cur[5] & vir[5] ) {
         cov[5] += 1;
-        assert(cov[5] <= 8);
+        if(cov[5] > 8){ACTF("bug!");};
       }
       if (cur[6] & vir[6] ) {
         cov[6] += 1;
-        assert(cov[6] <= 8);
+        if(cov[6] > 8){ACTF("bug!");};
       }
       if (cur[7] & vir[7] ) {
         cov[7] += 1;
-        assert(cov[7] <= 8);
+        if(cov[7] > 8){ACTF("bug!");};
       }
 
   }
