@@ -254,11 +254,12 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
         
         current++;
         virgin++;
+        coverage++;
 
       }
 
       if(min_coverage_num == 1){ret = 2;} // min_coverage_numが0ってことは，retが2ってこと
-      else if(min_coverage_num < afl->saturation_level){ret = 1;} // 
+      else if(min_coverage_num <= afl->saturation_level){ret = 1;} // 
   }
 
   if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
