@@ -114,7 +114,7 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
 /* Updates the virgin bits, then reflects whether a new count or a new tuple is
  * seen in ret. */
 // saturateしたら，回数変化のエッジの数が多いやつの方から
-inline void detect_if_enqueue_after_saturation(u8 *ret, u64 *current, u64 *virgin, u8 *max_count_difference_bytes) {
+inline void detect_if_enqueue(u8 *ret, u64 *current, u64 *virgin, u64 *coverage, u8 *min_coverage_num) {
 
   /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
      that have not been already cleared from the virgin map - since this will
@@ -122,75 +122,44 @@ inline void detect_if_enqueue_after_saturation(u8 *ret, u64 *current, u64 *virgi
 
   if (*current & *virgin) {
 
-    if (likely(*ret < 2)) {
-
       u8 *cur = (u8 *)current;
       u8 *vir = (u8 *)virgin;
+      u8 *cov = (u8 *)coverage;
 
       /* Looks like we have not found any new bytes yet; see if any non-zero
          bytes in current[] are pristine in virgin[]. */
       if (cur[0] & vir[0]) {
-        if(vir[0] == 0xff){*ret = 2;}
-        else{*max_count_difference_bytes = MAX(*max_count_difference_bytes, cur[0]);}
+        cov[0] += 1;
+        *min_coverage_num = MIN(*min_coverage_num, cov[0]);
       }
       if (cur[1] & vir[1]) {
-        if(vir[1] == 0xff){*ret = 2;}
-        else{*max_count_difference_bytes = MAX(*max_count_difference_bytes, cur[1]);}
+        cov[1] += 1;
+        *min_coverage_num = MIN(*min_coverage_num, cov[1]);
       }
       if (cur[2] & vir[2]) {
-        if(vir[2] == 0xff){*ret = 2;}
-        else{*max_count_difference_bytes = MAX(*max_count_difference_bytes, cur[2]);}
+        cov[2] += 1;
+        *min_coverage_num = MIN(*min_coverage_num, cov[2]);
       }
       if (cur[3] & vir[3]) {
-        if(vir[3] == 0xff){*ret = 2;}
-        else{*max_count_difference_bytes = MAX(*max_count_difference_bytes, cur[3]);}
+        cov[3] += 1;
+        *min_coverage_num = MIN(*min_coverage_num, cov[3]);
       }
       if (cur[4] & vir[4]) {
-        if(vir[4] == 0xff){*ret = 2;}
-        else{*max_count_difference_bytes = MAX(*max_count_difference_bytes, cur[4]);}
+        cov[4] += 1;
+        *min_coverage_num = MIN(*min_coverage_num, cov[4]);
       }
       if (cur[5] & vir[5] ) {
-        if(vir[5] == 0xff){*ret = 2;}
-        else{*max_count_difference_bytes = MAX(*max_count_difference_bytes, cur[5]);}
+        cov[5] += 1;
+        *min_coverage_num = MIN(*min_coverage_num, cov[5]);
       }
       if (cur[6] & vir[6] ) {
-        if(vir[6] == 0xff){*ret = 2;}
-        else{*max_count_difference_bytes = MAX(*max_count_difference_bytes, cur[6]);}
+        cov[6] += 1;
+        *min_coverage_num = MIN(*min_coverage_num, cov[6]);
       }
       if (cur[7] & vir[7] ) {
-        if(vir[7] == 0xff){*ret = 2;}
-        else{*max_count_difference_bytes = MAX(*max_count_difference_bytes, cur[7]);}
+        cov[7] += 1;
+        *min_coverage_num = MIN(*min_coverage_num, cov[7]);
       }
-
-    }
-
-  }
-
-}
-
-/* Updates the virgin bits, then reflects whether a new count or a new tuple is
- * seen in ret. */
-// saturateする前だと
-inline void detect_if_enqueue_before_saturation(u8 *ret, u64 *current, u64 *virgin) {
-
-  if (*current & *virgin) {
-
-    if (likely(*ret < 2)) {
-
-      u8 *cur = (u8 *)current;
-      u8 *vir = (u8 *)virgin;
-
-      /* Looks like we have not found any new bytes yet; see if any non-zero
-         bytes in current[] are pristine in virgin[]. */
-
-      if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
-          (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
-          (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
-          (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff)){
-        *ret = 2;
-      }
-
-    }
 
   }
 
