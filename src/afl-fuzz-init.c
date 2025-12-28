@@ -1524,7 +1524,6 @@ void perform_dry_run(afl_state_t *afl) {
     cov[5] = zero_bits(vir[5]);
     cov[6] = zero_bits(vir[6]);
     cov[7] = zero_bits(vir[7]);
-    ACTF("cov[7]: %u", cov[7]);
     coverage++;
     virgin++;
   }
