@@ -129,36 +129,98 @@ inline void detect_if_enqueue(u8 *ret, u64 *current, u64 *virgin, u64 *coverage,
       /* Looks like we have not found any new bytes yet; see if any non-zero
          bytes in current[] are pristine in virgin[]. */
       if (cur[0] & vir[0]) {
-        cov[0] += 1;
         *min_coverage_num = MIN(*min_coverage_num, cov[0]);
+        if (cov[0] == 0 && vir[0] != 0xff){
+          ACTF("bug!, vir: %u", vir[0]);
+        }
+      }
+      if (cur[1] & vir[1]) {
+        *min_coverage_num = MIN(*min_coverage_num, cov[1]);
+        if (cov[1] == 0 && vir[1] != 0xff){
+          ACTF("bug!, vir: %u", vir[1]);
+        }
+      }
+      if (cur[2] & vir[2]) {
+        *min_coverage_num = MIN(*min_coverage_num, cov[2]);
+        if (cov[2] == 0 && vir[2] != 0xff){
+          ACTF("bug!, vir: %u", vir[2]);
+        }
+      }
+      if (cur[3] & vir[3]) {
+        *min_coverage_num = MIN(*min_coverage_num, cov[3]);
+        if (cov[3] == 0 && vir[3] != 0xff){
+          ACTF("bug!, vir: %u", vir[3]);
+        }
+      }
+      if (cur[4] & vir[4]) {
+        *min_coverage_num = MIN(*min_coverage_num, cov[4]);
+        if (cov[4] == 0 && vir[4] != 0xff){
+          ACTF("bug!, vir: %u", vir[4]);
+        }
+      }
+      if (cur[5] & vir[5] ) {
+        *min_coverage_num = MIN(*min_coverage_num, cov[5]);
+        if (cov[5] == 0 && vir[5] != 0xff){
+          ACTF("bug!, vir: %u", vir[5]);
+        }
+      }
+      if (cur[6] & vir[6] ) {
+        *min_coverage_num = MIN(*min_coverage_num, cov[6]);
+        if (cov[6] == 0 && vir[6] != 0xff){
+          ACTF("bug!, vir: %u", vir[6]);
+        }
+      }
+      if (cur[7] & vir[7] ) {
+        *min_coverage_num = MIN(*min_coverage_num, cov[7]);
+        if (cov[7] == 0 && vir[7] != 0xff){
+          ACTF("bug!, vir: %u", vir[7]);
+        }
+      }
+
+  }
+
+}
+
+/* Updates the virgin bits, then reflects whether a new count or a new tuple is
+ * seen in ret. */
+// coverageだけをupdateする
+inline void update_cov(u64 *current, u64 *virgin, u64 *coverage) {
+
+  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
+     that have not been already cleared from the virgin map - since this will
+     almost always be the case. */
+
+  if (*current & *virgin) {
+
+      u8 *cur = (u8 *)current;
+      u8 *vir = (u8 *)virgin;
+      u8 *cov = (u8 *)coverage;
+
+      /* Looks like we have not found any new bytes yet; see if any non-zero
+         bytes in current[] are pristine in virgin[]. */
+      if (cur[0] & vir[0]) {
+        cov[0] += 1;
       }
       if (cur[1] & vir[1]) {
         cov[1] += 1;
-        *min_coverage_num = MIN(*min_coverage_num, cov[1]);
       }
       if (cur[2] & vir[2]) {
         cov[2] += 1;
-        *min_coverage_num = MIN(*min_coverage_num, cov[2]);
       }
       if (cur[3] & vir[3]) {
         cov[3] += 1;
-        *min_coverage_num = MIN(*min_coverage_num, cov[3]);
       }
       if (cur[4] & vir[4]) {
         cov[4] += 1;
-        *min_coverage_num = MIN(*min_coverage_num, cov[4]);
       }
       if (cur[5] & vir[5] ) {
         cov[5] += 1;
-        *min_coverage_num = MIN(*min_coverage_num, cov[5]);
       }
       if (cur[6] & vir[6] ) {
         cov[6] += 1;
-        *min_coverage_num = MIN(*min_coverage_num, cov[6]);
       }
       if (cur[7] & vir[7] ) {
         cov[7] += 1;
-        *min_coverage_num = MIN(*min_coverage_num, cov[7]);
       }
 
   }

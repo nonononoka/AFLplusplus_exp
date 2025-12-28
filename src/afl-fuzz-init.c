@@ -885,6 +885,15 @@ void read_testcases(afl_state_t *afl, u8 *directory) {
 
 }
 
+int zero_bits(u8 x) {
+    int cnt = 0;
+    for (int i = 0; i < 8; i++) {
+        if (((x >> i) & 1) == 0)
+            cnt++;
+    }
+    return cnt;
+}
+
 /* Perform dry run of all test cases to confirm that the app is working as
    expected. This is done only for the initial inputs, and only once. */
 
@@ -1500,6 +1509,25 @@ void perform_dry_run(afl_state_t *afl) {
 
   OKF("All test cases processed.");
 
+  // ここで初期シードによるcoverage計算を行う
+  u64 *virgin = (u64 *)afl->virgin_bits;
+  u64 *coverage = (u64*)afl->coverage_bits;
+  u32 map_index = ((afl->fsrv.real_map_size + 7) >> 3);
+  while(map_index--){
+    u8 *vir = (u8 *)virgin;
+    u8 *cov = (u8 *)coverage;
+    cov[0] = zero_bits(vir[0]);
+    cov[1] = zero_bits(vir[1]);
+    cov[2] = zero_bits(vir[2]);
+    cov[3] = zero_bits(vir[3]);
+    cov[4] = zero_bits(vir[4]);
+    cov[5] = zero_bits(vir[5]);
+    cov[6] = zero_bits(vir[6]);
+    cov[7] = zero_bits(vir[7]);
+    ACTF("cov[7]: %u", cov[7]);
+    coverage++;
+    virgin++;
+  }
 }
 
 /* Helper function: link() if possible, copy otherwise. */

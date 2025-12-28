@@ -1229,6 +1229,7 @@ void simplify_trace(afl_state_t *, u8 *);
 #ifdef WORD_SIZE_64
 void discover_word(u8 *ret, u64 *current, u64 *virgin);
 void detect_if_enqueue(u8 *ret, u64 *current, u64 *virgin, u64 *coverage, u8 *min_coverage_num);
+void update_cov(u64 *current, u64 *virgin, u64 *coverage);
 #else
 void discover_word(u8 *ret, u32 *current, u32 *virgin);
 #endif

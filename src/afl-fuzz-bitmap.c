@@ -258,8 +258,27 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
 
       }
 
+      min_coverage_num += 1; // グラフのと整合性を取りたいので
       if(min_coverage_num == 1){ret = 2;} // min_coverage_numが0ってことは，retが2ってこと
       else if(min_coverage_num <= afl->saturation_level){ret = 1;} // 
+
+      if (ret >= 1){ // coverage bitsを更新する
+          u64 *current = (u64 *)afl->fsrv.trace_bits;
+          u64 *virgin = (u64 *)virgin_map;
+          u64 *coverage = (u64 *)afl->coverage_bits;
+
+          u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
+
+          while (i--) {
+
+            if (unlikely(*current)) {update_cov(current, virgin, coverage);} // ここで回数を数える
+            
+            current++;
+            virgin++;
+            coverage++;
+
+        }
+      }
   }
 
   if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
