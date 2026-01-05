@@ -614,9 +614,9 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
           (u32)afl->san_binary_length);                    /* ignore errors */
   
   if(afl->saturation_level < 9){
-    if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*300){
+    if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*600){
       if (((double)(afl->queued_items - afl->prev_total_queued_items_in_10_minutes) / (double)afl->prev_total_queued_items_in_10_minutes) <= 0.01){
-        afl->saturation_level=9;
+        afl->saturation_level++;
         ACTF("has saturated!: %u", afl->saturation_level);
       }
       afl->prev_total_queued_items_in_10_minutes = afl->queued_items;
