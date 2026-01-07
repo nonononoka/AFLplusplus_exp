@@ -542,7 +542,7 @@ u8 calibrate_case(afl_state_t *afl, struct queue_entry *q, u8 *use_mem,
   if (q->exec_cksum) {
 
     memcpy(afl->first_trace, afl->fsrv.trace_bits, afl->fsrv.map_size);
-    hnb = has_new_bits(afl, afl->virgin_bits, 1);
+    hnb = has_new_bits(afl, afl->virgin_bits);
     if (unlikely(hnb > new_bits)) { new_bits = hnb; }
 
   }
@@ -589,7 +589,7 @@ u8 calibrate_case(afl_state_t *afl, struct queue_entry *q, u8 *use_mem,
 
     if (unlikely(q->exec_cksum != cksum)) {
 
-      hnb = has_new_bits(afl, afl->virgin_bits, 1);
+      hnb = has_new_bits(afl, afl->virgin_bits);
 
       if (unlikely(hnb > new_bits)) { new_bits = hnb; }
 
@@ -605,7 +605,7 @@ u8 calibrate_case(afl_state_t *afl, struct queue_entry *q, u8 *use_mem,
             afl->var_bytes[i] = 1;
             // ignore the variable edge by setting it to fully discovered
             afl->virgin_bits[i] = 0;
-            // ここはcoverage_bitsは更新してもしなくてもいい．virgin_bitsを0にしたら更新されないようになってる．
+
           }
 
         }

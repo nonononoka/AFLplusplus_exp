@@ -102,7 +102,7 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size) {
   afl->sync_time = SYNC_TIME;
   afl->cmplog_lvl = 2;
   afl->min_length = 1;
-  afl->saturation_level = 1;
+  afl->coverage_granularity_level = 1;
   afl->max_length = MAX_FILE;
   afl->switch_fuzz_mode = STRATEGY_SWITCH_TIME * 1000;
   afl->q_testcase_max_cache_size = TESTCASE_CACHE_SIZE * 1048576UL;
@@ -114,7 +114,6 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size) {
 #endif                                                     /* HAVE_AFFINITY */
 
   afl->virgin_bits = ck_alloc(map_size);
-  afl->coverage_bits = ck_alloc(map_size);
   afl->virgin_tmout = ck_alloc(map_size);
   afl->virgin_crash = ck_alloc(map_size);
   afl->var_bytes = ck_alloc(map_size);
@@ -153,7 +152,6 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size) {
 void afl_resize_map_buffers(afl_state_t *afl, u32 old_size, u32 new_size) {
 
   afl->virgin_bits = ck_realloc(afl->virgin_bits, new_size);
-  afl->coverage_bits = ck_realloc(afl->coverage_bits, new_size);
   afl->virgin_tmout = ck_realloc(afl->virgin_tmout, new_size);
   afl->virgin_crash = ck_realloc(afl->virgin_crash, new_size);
   afl->var_bytes = ck_realloc(afl->var_bytes, new_size);
@@ -880,7 +878,6 @@ void afl_state_deinit(afl_state_t *afl) {
   afl_free(afl->alias_probability);
 
   ck_free(afl->virgin_bits);
-  ck_free(afl->coverage_bits);
   ck_free(afl->virgin_tmout);
   ck_free(afl->virgin_crash);
   ck_free(afl->var_bytes);

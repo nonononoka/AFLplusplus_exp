@@ -11,8 +11,9 @@
   #include <immintrin.h>
 #endif
 
-u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end);
+u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end, const u8 coverage_granularity_level);
 u64 classify_word(u64 word);
+u8 minimum_bit_counts(u64 word_comp, u64 word);
 
 inline u64 classify_word(u64 word) {
 
@@ -27,6 +28,20 @@ inline u64 classify_word(u64 word) {
   memcpy(&word, mem16, sizeof(mem16));
   return word;
 
+}
+
+inline u8 minimum_bit_counts(u64 word_comp, u64 word) {
+  u8 m = 9; // popcount(byte) の最大は 8
+
+  for (int i = 0; i < 8; i++) {
+    u8 wc   = (u8)(word_comp >> (8 * i));
+    u8 w    = (u8)(word      >> (8 * i));
+    u8 mask = count_class_lookup8[wc];
+
+    if (w & mask) {  m = MIN(m, 8 - coverage_bit_count_lut[w]);   }
+  }
+
+  return m;
 }
 
 void simplify_trace(afl_state_t *afl, u8 *bytes) {
@@ -111,106 +126,6 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
 
 }
 
-/* Updates the virgin bits, then reflects whether a new count or a new tuple is
- * seen in ret. */
-// saturateしたら，回数変化のエッジの数が多いやつの方から
-inline void detect_if_enqueue(u8 *ret, u64 *current, u64 *virgin, u64 *coverage, u8 *min_coverage_num) {
-
-  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
-     that have not been already cleared from the virgin map - since this will
-     almost always be the case. */
-
-  if (*current & *virgin) {
-
-      u8 *cur = (u8 *)current;
-      u8 *vir = (u8 *)virgin;
-      u8 *cov = (u8 *)coverage;
-
-      /* Looks like we have not found any new bytes yet; see if any non-zero
-         bytes in current[] are pristine in virgin[]. */
-      if (cur[0] & vir[0]) {
-        *min_coverage_num = MIN(*min_coverage_num, cov[0]);
-      }
-      if (cur[1] & vir[1]) {
-        *min_coverage_num = MIN(*min_coverage_num, cov[1]);
-      }
-      if (cur[2] & vir[2]) {
-        *min_coverage_num = MIN(*min_coverage_num, cov[2]);
-      }
-      if (cur[3] & vir[3]) {
-        *min_coverage_num = MIN(*min_coverage_num, cov[3]);
-      }
-      if (cur[4] & vir[4]) {
-        *min_coverage_num = MIN(*min_coverage_num, cov[4]);
-      }
-      if (cur[5] & vir[5] ) {
-        *min_coverage_num = MIN(*min_coverage_num, cov[5]);
-      }
-      if (cur[6] & vir[6] ) {
-        *min_coverage_num = MIN(*min_coverage_num, cov[6]);
-      }
-      if (cur[7] & vir[7] ) {
-        *min_coverage_num = MIN(*min_coverage_num, cov[7]);
-      }
-
-  }
-
-}
-
-/* Updates the virgin bits, then reflects whether a new count or a new tuple is
- * seen in ret. */
-// coverageだけをupdateする
-inline void update_cov(u64 *current, u64 *virgin, u64 *coverage) {
-
-  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
-     that have not been already cleared from the virgin map - since this will
-     almost always be the case. */
-
-  if (*current & *virgin) {
-
-      u8 *cur = (u8 *)current;
-      u8 *vir = (u8 *)virgin;
-      u8 *cov = (u8 *)coverage;
-
-      /* Looks like we have not found any new bytes yet; see if any non-zero
-         bytes in current[] are pristine in virgin[]. */
-      if (cur[0] & vir[0]) {
-        cov[0] += 1;
-        if(cov[0] > 8){ACTF("bug!");};
-      }
-      if (cur[1] & vir[1]) {
-        cov[1] += 1;
-        if(cov[1] > 8){ACTF("bug!");};
-      }
-      if (cur[2] & vir[2]) {
-        cov[2] += 1;
-        if(cov[2] > 8){ACTF("bug!");};
-      }
-      if (cur[3] & vir[3]) {
-        cov[3] += 1;
-        if(cov[3] > 8){ACTF("bug!");};
-      }
-      if (cur[4] & vir[4]) {
-        cov[4] += 1;
-        if(cov[4] > 8){ACTF("bug!");};
-      }
-      if (cur[5] & vir[5] ) {
-        cov[5] += 1;
-        if(cov[5] > 8){ACTF("bug!");};
-      }
-      if (cur[6] & vir[6] ) {
-        cov[6] += 1;
-        if(cov[6] > 8){ACTF("bug!");};
-      }
-      if (cur[7] & vir[7] ) {
-        cov[7] += 1;
-        if(cov[7] > 8){ACTF("bug!");};
-      }
-
-  }
-
-}
-
 #if defined(__AVX512F__) && defined(__AVX512DQ__)
   #define PACK_SIZE 64
 inline u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end) {
@@ -280,14 +195,14 @@ inline u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end) {
 
 #if !defined(PACK_SIZE)
   #define PACK_SIZE 32
-inline u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end) {
+inline u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end, const u8 coverage_granularity_level) {
 
   for (; current < current_end; virgin += 4, current += 4) {
 
-    if (unlikely(current[0] && classify_word(current[0]) & virgin[0])) return 1;
-    if (unlikely(current[1] && classify_word(current[1]) & virgin[1])) return 1;
-    if (unlikely(current[2] && classify_word(current[2]) & virgin[2])) return 1;
-    if (unlikely(current[3] && classify_word(current[3]) & virgin[3])) return 1;
+    if (unlikely(current[0] && (classify_word(current[0]) & virgin[0]) && minimum_bit_counts(current[0], virgin[0]) < coverage_granularity_level)) return 1;
+    if (unlikely(current[1] && (classify_word(current[1]) & virgin[1]) && minimum_bit_counts(current[1], virgin[1]) < coverage_granularity_level)) return 1;
+    if (unlikely(current[2] && (classify_word(current[2]) & virgin[2]) && minimum_bit_counts(current[2], virgin[2]) < coverage_granularity_level)) return 1;
+    if (unlikely(current[3] && (classify_word(current[3]) & virgin[3]) && minimum_bit_counts(current[3], virgin[3]) < coverage_granularity_level)) return 1;
 
   }
 

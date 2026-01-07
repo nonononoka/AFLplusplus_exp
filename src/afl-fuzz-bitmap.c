@@ -30,6 +30,7 @@
 #include "asanfuzz.h"
 
 u16 count_class_lookup16[65536];
+u8 coverage_bit_count_lut[256];
 
 /* Destructively simplify trace by eliminating hit count information
    and replacing it with 0x80 or 0x01 depending on whether the tuple
@@ -208,6 +209,14 @@ void init_count_class16(void) {
 
 }
 
+static inline u8 popcount_u8(u8 x) { x = x - ((x >> 1) & 0x55); x = (x & 0x33) + ((x >> 2) & 0x33); return (x + (x >> 4)) & 0x0F; }
+
+void init_coverage_lut(void) {
+    for (int i = 0; i < 256; i++) {
+        coverage_bit_count_lut[i] = popcount_u8((u8)i);
+    }
+}
+
 /* Check if the current execution path brings anything new to the table.
    Update virgin bits to reflect the finds. Returns 1 if the only change is
    the hit-count for a particular tuple; 2 if there are new tuples seen.
@@ -216,12 +225,12 @@ void init_count_class16(void) {
    This function is called after every exec() on a fairly large buffer, so
    it needs to be fast. We do this in 32-bit and 64-bit flavors. */
 
-inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
+inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
+
 #ifdef WORD_SIZE_64
 
   u64 *current = (u64 *)afl->fsrv.trace_bits;
   u64 *virgin = (u64 *)virgin_map;
-  u64 *coverage = (u64 *)afl->coverage_bits;
 
   u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
 
@@ -235,58 +244,22 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map, u8 should_update_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
 
   u8 ret = 0;
+  while (i--) {
 
-  if(should_update_map){ // こっちは、calibrate caseとかから呼ばれるやつ
-    while (i--) {
+    if (unlikely(*current)) discover_word(&ret, current, virgin);
 
-      if (unlikely(*current)) {discover_word(&ret, current, virgin);}
+    current++;
+    virgin++;
 
-      current++;
-      virgin++;
-
-    }
-  } else{ // これはseedを入れたあとに1回だけ呼び出されるから，ここでcoverage bitsを更新するべき.
-      u8 min_coverage_num = 9;
-
-      while (i--) {
-
-        if (unlikely(*current)) {detect_if_enqueue(&ret, current, virgin, coverage, &min_coverage_num);} // ここで回数を数える
-        
-        current++;
-        virgin++;
-        coverage++;
-
-      }
-
-      min_coverage_num += 1; // グラフのと整合性を取りたいので
-      if(min_coverage_num == 1){ret = 2;} // min_coverage_numが0ってことは，retが2ってこと
-      else if(min_coverage_num <= afl->saturation_level){ret = 1;} // 
-
-      if (ret){ // coverage bitsを更新する
-          u64 *current = (u64 *)afl->fsrv.trace_bits;
-          u64 *virgin = (u64 *)virgin_map;
-          u64 *coverage = (u64 *)afl->coverage_bits;
-
-          u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
-
-          while (i--) {
-
-            if (unlikely(*current)) {update_cov(current, virgin, coverage);} // ここで回数を数える
-            
-            current++;
-            virgin++;
-            coverage++;
-
-        }
-      }
   }
 
   if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
-    afl->bitmap_changed = 1; // ここのフラグは雑になっちゃうけど、fileに書き込んでいるだけだからまあとりあえず良い
+    afl->bitmap_changed = 1;
 
   return ret;
 
 }
+
 
 /* A combination of classify_counts and has_new_bits. If 0 is returned, then the
  * trace bits are kept as-is. Otherwise, the trace bits are overwritten with
@@ -306,7 +279,7 @@ static inline u8 has_new_bits_unclassified(afl_state_t *afl, u8 *virgin_map,
 
 #ifdef WORD_SIZE_64
 
-  if (!skim((u64 *)virgin_map, (u64 *)afl->fsrv.trace_bits, (u64 *)end))
+  if (!skim((u64 *)virgin_map, (u64 *)afl->fsrv.trace_bits, (u64 *)end, afl->coverage_granularity_level))
     return 0;
 
 #else
@@ -317,7 +290,7 @@ static inline u8 has_new_bits_unclassified(afl_state_t *afl, u8 *virgin_map,
 #endif                                                     /* ^WORD_SIZE_64 */
   classify_counts(&afl->fsrv);
   *classified = true;
-  return has_new_bits(afl, virgin_map, 0);
+  return has_new_bits(afl, virgin_map);
 
 }
 
@@ -549,7 +522,7 @@ static inline void calculate_new_bits_if_necessary(afl_state_t *afl,
 
   if (*classified) {
 
-    *new_bits = has_new_bits(afl, afl->virgin_bits, 0);
+    *new_bits = has_new_bits(afl, afl->virgin_bits);
 
   } else {
 
@@ -713,10 +686,9 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
 
     /* Keep only if there are new bits in the map, add to queue for
        future fuzzing, etc. */
-    // 飽和していない場合は、回数変化のみのシードは加えない
     calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
-    
-    if (likely(!new_bits)) { // new_bitsは、saturate前は、0 or 2で、saturate後は0 or 1 or 2になってるから、これで良い
+
+    if (likely(!new_bits)) {
 
       if (san_fault == FSRV_RUN_OK) {
 
@@ -878,7 +850,7 @@ may_save_fault:
 
         simplify_trace(afl, afl->fsrv.trace_bits);
 
-        if (!has_new_bits(afl, afl->virgin_tmout, 1)) { return keeping; }
+        if (!has_new_bits(afl, afl->virgin_tmout)) { return keeping; }
 
       }
 
@@ -1013,7 +985,7 @@ may_save_fault:
 
         simplify_trace(afl, afl->fsrv.trace_bits);
 
-        if (!has_new_bits(afl, afl->virgin_crash, 1)) { return keeping; }
+        if (!has_new_bits(afl, afl->virgin_crash)) { return keeping; }
 
       }
 

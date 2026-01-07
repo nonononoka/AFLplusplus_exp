@@ -414,7 +414,7 @@ u8 fuzz_one_original(afl_state_t *afl) {
         "Fuzzing test case #%u (%u total, %s%llu crashes saved%s, state: %s, "
         "mode=%s, "
         "perf_score=%0.0f, weight=%0.0f, favorite=%u, was_fuzzed=%u, "
-        "exec_us=%llu, hits=%u, map=%u, ascii=%u, run_time=%s)...",
+        "exec_us=%llu, hits=%u, map=%u, ascii=%u, run_time=%s, total_execs=%u)...",
         afl->current_entry, afl->queued_items,
         afl->saved_crashes != 0 ? cRED : "", afl->saved_crashes, cRST,
         get_fuzzing_state(afl), afl->fuzz_mode ? "exploit" : "explore",
@@ -422,7 +422,7 @@ u8 fuzz_one_original(afl_state_t *afl) {
         afl->queue_cur->favored, afl->queue_cur->was_fuzzed,
         afl->queue_cur->exec_us,
         likely(afl->n_fuzz) ? afl->n_fuzz[afl->queue_cur->n_fuzz_entry] : 0,
-        afl->queue_cur->bitmap_size, afl->queue_cur->is_ascii, time_tmp);
+        afl->queue_cur->bitmap_size, afl->queue_cur->is_ascii, time_tmp, afl->fsrv.total_execs);
     fflush(stdout);
 
   }

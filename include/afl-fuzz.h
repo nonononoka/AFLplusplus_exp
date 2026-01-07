@@ -880,9 +880,7 @@ typedef struct afl_state {
 
   s64 last_scored_idx;           /* Index of the last queue entry re-scored */
 
-  u8 saturation_level;
-
-  u8* coverage_bits;
+  u8 coverage_granularity_level;
 
   u32 prev_total_queued_items_in_10_minutes;
 
@@ -1228,18 +1226,17 @@ u32  count_non_255_bytes(afl_state_t *, u8 *);
 void simplify_trace(afl_state_t *, u8 *);
 #ifdef WORD_SIZE_64
 void discover_word(u8 *ret, u64 *current, u64 *virgin);
-void detect_if_enqueue(u8 *ret, u64 *current, u64 *virgin, u64 *coverage, u8 *min_coverage_num);
-void update_cov(u64 *current, u64 *virgin, u64 *coverage);
 #else
 void discover_word(u8 *ret, u32 *current, u32 *virgin);
 #endif
 void init_count_class16(void);
+void init_coverage_lut(void);
 void minimize_bits(afl_state_t *, u8 *, u8 *);
 #ifndef SIMPLE_FILES
 u8 *describe_op(afl_state_t *, u8, size_t);
 #endif
 u8 save_if_interesting(afl_state_t *, void *, u32, u8);
-u8 has_new_bits(afl_state_t *, u8 *, u8);
+u8 has_new_bits(afl_state_t *, u8 *);
 #ifndef AFL_SHOWMAP
 void classify_counts(afl_forkserver_t *);
 #endif

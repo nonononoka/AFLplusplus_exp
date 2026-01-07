@@ -2142,6 +2142,7 @@ int main(int argc, char **argv_orig, char **envp) {
   #endif
 
   init_count_class16();
+  init_coverage_lut();
 
   if (afl->is_main_node && check_main_node_exists(afl) == 1) {
 
