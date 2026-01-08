@@ -613,14 +613,20 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
           afl->plot_prev_ed, t_bytes, afl->total_crashes,
           (u32)afl->san_binary_length);                    /* ignore errors */
   
-  if(afl->coverage_granularity_level < 9){
+  if(afl->coverage_granularity_level < 8){
     if (afl->plot_prev_ed - afl->last_updated_execs >= ave_execs_per_s*300){
-      if (((double)(afl->queued_items - afl->prev_total_queued_items_in_10_minutes) / (double)afl->prev_total_queued_items_in_10_minutes) <= 0.01){
+      // 今の傾きを計算
+      double current_inclination = (double)(afl->queued_items - afl->prev_total_queued_items) / (double)(afl->plot_prev_ed - afl->last_updated_execs);
+      afl->current_phase_max_inclination = MAX(afl->current_phase_max_inclination, current_inclination);
+      ACTF("current inclination: %f, current phase max inclination: %f", current_inclination, afl->current_phase_max_inclination);
+      if ((current_inclination / afl->current_phase_max_inclination) <= 0.01){
         afl->coverage_granularity_level++;
+        // afl->current_phase_max_inclination = 0.0; 戻さない最大値のまま
         ACTF("has saturated!: %u", afl->coverage_granularity_level);
       }
-      afl->prev_total_queued_items_in_10_minutes = afl->queued_items;
-      afl->last_updated_execs = afl->plot_prev_ed; // 今までの実行回数
+      afl->prev_total_queued_items = afl->queued_items;
+      afl->last_updated_execs = afl->plot_prev_ed;
+      afl->prev_inclination = current_inclination;
     }
   }
 

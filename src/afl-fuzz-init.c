@@ -1499,7 +1499,7 @@ void perform_dry_run(afl_state_t *afl) {
   }
 
   OKF("All test cases processed.");
-
+  afl->prev_total_queued_items = afl->queued_items;
 }
 
 /* Helper function: link() if possible, copy otherwise. */

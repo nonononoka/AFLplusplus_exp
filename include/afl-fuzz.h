@@ -882,9 +882,13 @@ typedef struct afl_state {
 
   u8 coverage_granularity_level;
 
-  u32 prev_total_queued_items_in_10_minutes;
+  u32 prev_total_queued_items;
 
   u64 last_updated_execs;
+
+  double prev_inclination; // 傾きの計算
+
+  double current_phase_max_inclination;
 
 #ifdef INTROSPECTION
   char  mutation[8072];
