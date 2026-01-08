@@ -619,7 +619,7 @@ void maybe_update_plot_file(afl_state_t *afl, u32 t_bytes, double bitmap_cvg,
       double current_inclination = (double)(afl->queued_items - afl->prev_total_queued_items) / (double)(afl->plot_prev_ed - afl->last_updated_execs);
       afl->current_phase_max_inclination = MAX(afl->current_phase_max_inclination, current_inclination);
       ACTF("current inclination: %f, current phase max inclination: %f", current_inclination, afl->current_phase_max_inclination);
-      if ((current_inclination / afl->current_phase_max_inclination) <= 0.005){
+      if ((current_inclination / afl->current_phase_max_inclination) <= 0.03){
         afl->coverage_granularity_level++;
         // afl->current_phase_max_inclination = 0.0; 戻さない最大値のまま
         ACTF("has saturated!: %u", afl->coverage_granularity_level);
