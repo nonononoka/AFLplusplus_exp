@@ -126,6 +126,89 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
 
 }
 
+/* Updates the virgin bits, then reflects whether a new count or a new tuple is
+ * seen in ret. */
+inline void discover_word_for_log(u8 *ret, u64 *current, u64 *virgin, u32 j) {
+
+  /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
+     that have not been already cleared from the virgin map - since this will
+     almost always be the case. */
+  u8 tmp_edge_ret = 0;
+  u8 tmp_count_ret = 0;
+  if (*current & *virgin) {
+
+      u8 *cur = (u8 *)current;
+      u8 *vir = (u8 *)virgin;
+
+      /* Looks like we have not found any new bytes yet; see if any non-zero
+         bytes in current[] are pristine in virgin[]. */
+
+      if ((cur[0] && vir[0] == 0xff) || (cur[1] && vir[1] == 0xff) ||
+          (cur[2] && vir[2] == 0xff) || (cur[3] && vir[3] == 0xff) ||
+          (cur[4] && vir[4] == 0xff) || (cur[5] && vir[5] == 0xff) ||
+          (cur[6] && vir[6] == 0xff) || (cur[7] && vir[7] == 0xff)){
+        tmp_edge_ret = 1;
+        // ACTF("new edge found!");
+        if (cur[0] && vir[0] == 0xff) {
+           ACTF("new edge found: %u %u", 8*j, cur[0]);
+        } if (cur[1] && vir[1] == 0xff) {
+            ACTF("new edge found: %u %u", 8*j+1, cur[1]);
+        } if (cur[2] && vir[2] == 0xff) {
+            ACTF("new edge found: %u %u", 8*j+2, cur[2]);
+        } if (cur[3] && vir[3] == 0xff) {
+            ACTF("new edge found: %u %u", 8*j+3, cur[3]);
+        } if (cur[4] && vir[4] == 0xff) {
+            ACTF("new edge found: %u %u", 8*j+4, cur[4]);
+        } if (cur[5] && vir[5] == 0xff) {
+            ACTF("new edge found: %u %u", 8*j+5, cur[5]);
+        } if (cur[6] && vir[6] == 0xff) {
+            ACTF("new edge found: %u %u", 8*j+6, cur[6]);
+        } if (cur[7] && vir[7] == 0xff) {
+            ACTF("new edge found: %u %u", 8*j+7, cur[7]);
+        } 
+      }
+        if ((vir[0] != 0xff) && (cur[0] & vir[0])) {
+            tmp_count_ret = 1;
+            ACTF("count differ: %u %u", 8*j, cur[0]);
+        } 
+        if ((vir[1] != 0xff) && (cur[1] & vir[1])) {
+            tmp_count_ret = 1;
+            ACTF("count differ: %u %u", 8*j+1, cur[1]);
+        } 
+        if ((vir[2] != 0xff) && (cur[2] & vir[2])) {
+            tmp_count_ret = 1;
+            ACTF("count differ: %u %u", 8*j+2, cur[2]);
+        } 
+        if ((vir[3] != 0xff) && (cur[3] & vir[3])) {
+            tmp_count_ret = 1;
+            ACTF("count differ: %u %u", 8*j+3, cur[3]);
+        } 
+        if ((vir[4] != 0xff) && (cur[4] & vir[4])) {
+            tmp_count_ret = 1;
+            ACTF("count differ: %u %u", 8*j+4, cur[4]);
+        } 
+        if ((vir[5] != 0xff) && (cur[5] & vir[5])) {
+            tmp_count_ret = 1;
+            ACTF("count differ: %u %u", 8*j+5, cur[5]);
+        } 
+        if ((vir[6] != 0xff) && (cur[6] & vir[6])) {
+            tmp_count_ret = 1;
+            ACTF("count differ: %u %u", 8*j+6, cur[6]);
+        } 
+        if ((vir[7] != 0xff) && (cur[7] & vir[7])) {
+            tmp_count_ret = 1;
+            ACTF("count differ: %u %u", 8*j+7, cur[7]);
+        }
+ 
+    if (likely(*ret < 2)) {
+      if (tmp_edge_ret == 1) {*ret = 2;}
+      else if (tmp_count_ret == 1){*ret = 1;}
+    }
+    *virgin &= ~*current;
+  }
+
+}
+
 #if defined(__AVX512F__) && defined(__AVX512DQ__)
   #define PACK_SIZE 64
 inline u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end) {

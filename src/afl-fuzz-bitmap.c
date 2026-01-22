@@ -260,6 +260,43 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
 
 }
 
+inline u8 has_new_bits_for_log(afl_state_t *afl, u8 *virgin_map) {
+
+#ifdef WORD_SIZE_64
+
+  u64 *current = (u64 *)afl->fsrv.trace_bits;
+  u64 *virgin = (u64 *)virgin_map;
+
+  u32 i = ((afl->fsrv.real_map_size + 7) >> 3);
+ 
+#else
+
+  u32 *current = (u32 *)afl->fsrv.trace_bits;
+  u32 *virgin = (u32 *)virgin_map;
+
+  u32 i = ((afl->fsrv.real_map_size + 3) >> 2);
+
+#endif                                                     /* ^WORD_SIZE_64 */
+
+  u8 ret = 0;
+  int j = 0;
+  while (i--) {
+
+    if (unlikely(*current)) discover_word_for_log(&ret, current, virgin, j);
+
+    current++;
+    virgin++;
+    j++;
+
+  }
+
+  if (unlikely(ret) && likely(virgin_map == afl->virgin_bits))
+    afl->bitmap_changed = 1;
+   return ret;
+ 
+}
+
+
 
 /* A combination of classify_counts and has_new_bits. If 0 is returned, then the
  * trace bits are kept as-is. Otherwise, the trace bits are overwritten with
@@ -291,6 +328,29 @@ static inline u8 has_new_bits_unclassified(afl_state_t *afl, u8 *virgin_map,
   classify_counts(&afl->fsrv);
   *classified = true;
   return has_new_bits(afl, virgin_map);
+
+}
+
+static inline u8 has_new_bits_unclassified_for_log(afl_state_t *afl, u8 *virgin_map,
+                                           bool *classified) {
+
+  /* Handle the hot path first: no new coverage */
+  u8 *end = afl->fsrv.trace_bits + afl->fsrv.map_size;
+
+#ifdef WORD_SIZE_64
+
+  if (!skim((u64 *)virgin_map, (u64 *)afl->fsrv.trace_bits, (u64 *)end, afl->coverage_granularity_level))
+    return 0;
+
+#else
+
+  if (!skim((u32 *)virgin_map, (u32 *)afl->fsrv.trace_bits, (u32 *)end))
+    return 0;
+
+#endif                                                     /* ^WORD_SIZE_64 */
+  classify_counts(&afl->fsrv);
+  *classified = true;
+  return has_new_bits_for_log(afl, virgin_map);
 
 }
 
@@ -534,6 +594,24 @@ static inline void calculate_new_bits_if_necessary(afl_state_t *afl,
 
 }
 
+static inline void calculate_new_bits_if_necessary_for_log(afl_state_t *afl,
+                                                   u8          *new_bits,
+                                                   bool        *bits_counted,
+                                                   bool        *classified) {                                                 
+  if (*bits_counted) return;
+
+  if (*classified) {
+    *new_bits = has_new_bits_for_log(afl, afl->virgin_bits);
+
+  } else {
+    *new_bits = has_new_bits_unclassified_for_log(afl, afl->virgin_bits, classified);
+
+  }
+
+  *bits_counted = true;
+
+}
+
 /* Check if the result of an execve() during routine fuzzing is interesting,
    save or queue the input test case for further analysis if so. Returns 1 if
    entry is saved, 0 otherwise. */
@@ -686,7 +764,8 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
 
     /* Keep only if there are new bits in the map, add to queue for
        future fuzzing, etc. */
-    calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
+    // calculate_new_bits_if_necessary(afl, &new_bits, &bits_counted, &classified);
+    calculate_new_bits_if_necessary_for_log(afl, &new_bits, &bits_counted, &classified);
 
     if (likely(!new_bits)) {
 
@@ -751,6 +830,7 @@ u8 __attribute__((hot)) save_if_interesting(afl_state_t *afl, void *mem,
 
     }
 
+    ACTF("queued seed: %s", queue_fn);
     add_to_queue(afl, queue_fn, len, 0);
 
     if (unlikely(afl->fuzz_mode) &&
