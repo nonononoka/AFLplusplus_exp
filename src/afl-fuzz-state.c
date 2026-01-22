@@ -102,7 +102,7 @@ void afl_state_init(afl_state_t *afl, uint32_t map_size) {
   afl->sync_time = SYNC_TIME;
   afl->cmplog_lvl = 2;
   afl->min_length = 1;
-  afl->coverage_granularity_level = 1;
+  afl->coverage_granularity_level = 8;
   afl->max_length = MAX_FILE;
   afl->switch_fuzz_mode = STRATEGY_SWITCH_TIME * 1000;
   afl->q_testcase_max_cache_size = TESTCASE_CACHE_SIZE * 1048576UL;
